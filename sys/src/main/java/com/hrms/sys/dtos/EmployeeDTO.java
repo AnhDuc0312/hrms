@@ -47,4 +47,6 @@ public class EmployeeDTO {
     private String education;
 
     private String department;
+
+    private Float allowance;
 }

@@ -61,6 +61,7 @@ public class NewsService implements INewsService {
 
         // Gán thông tin người dùng cho đối tượng NewsDTO
         News news = new News();
+        news.setAuthor(author.get());
         news.setTitle(newsDTO.getTitle());
         news.setContent(newsDTO.getContent());
         news.setTime(LocalDateTime.now());

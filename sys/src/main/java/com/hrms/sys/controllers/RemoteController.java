@@ -16,6 +16,7 @@ import java.util.List;
 public class RemoteController {
     private final RemoteService remoteService;
 
+
     @GetMapping
     public ResponseEntity<List<Remote>> getAllRemotes() {
         try {

@@ -4,7 +4,6 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDate;
-import java.util.Date;
 
 @Entity
 @Table(name = "employees")
@@ -69,6 +68,16 @@ public class Employee {
     //Lương cơ bản
     @Column(name = "hourly_wage")
     private float hourlyWage;
+
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "benifit")
+    private Benefit benifit;
+
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "payroll")
+    private Payroll payroll;
+
+
 
 //    private float
 

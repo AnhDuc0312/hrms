@@ -16,6 +16,4 @@ public class NewsDTO {
     @JsonProperty("content")
     private String content;
 
-    @JsonProperty("author")
-    private String author;
 }

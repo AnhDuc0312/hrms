@@ -18,6 +18,8 @@ public class NewsController {
 
     private final NewsService newsService;
 
+
+
     @GetMapping("")
     public ResponseEntity<List<NewsResponse>> getAllNews() {
         try {

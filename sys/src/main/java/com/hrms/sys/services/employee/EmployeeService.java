@@ -2,9 +2,7 @@ package com.hrms.sys.services.employee;
 
 import com.hrms.sys.dtos.EmployeeDTO;
 import com.hrms.sys.exceptions.InvalidDataException;
-import com.hrms.sys.models.Employee;
-import com.hrms.sys.models.Role;
-import com.hrms.sys.models.User;
+import com.hrms.sys.models.*;
 import com.hrms.sys.repositories.EmployeeRepository;
 import com.hrms.sys.repositories.RoleRepository;
 import com.hrms.sys.repositories.UserRepository;
@@ -42,6 +40,8 @@ public class EmployeeService implements IEmployeeService {
 
     @Override
     public Employee createEmployee(EmployeeDTO employeeDTO, MultipartFile avatar) throws Exception {
+        Benefit benefit = Benefit.builder().build();
+        Payroll payroll = Payroll.builder().build();
         Employee newEmployee = Employee.builder()
                 .fullName(employeeDTO.getFullName())
                 .gender(employeeDTO.getGender())
@@ -53,6 +53,8 @@ public class EmployeeService implements IEmployeeService {
                 .contactEndDate(employeeDTO.getContactEndDate())
                 .position(employeeDTO.getPosition())
                 .education(employeeDTO.getEducation())
+                .benifit(benefit)
+                .payroll(payroll)
                 .build();
 
         Employee savedEmployee = employeeRepository.save(newEmployee);

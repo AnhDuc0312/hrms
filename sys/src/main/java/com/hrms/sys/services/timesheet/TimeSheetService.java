@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -170,6 +171,10 @@ public class TimeSheetService implements ITimeSheetService{
     private TimeSheetDTO mapTimeSheetToDTO(TimeSheet timeSheet) {
         TimeSheetDTO timeSheetDTO = new TimeSheetDTO();
         // Ánh xạ các trường thông tin từ timeSheet sang timeSheetDTO
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
+        String formattedInTime = timeSheet.getInTime().format(formatter); // Định dạng thành chuỗi
+
+
         timeSheetDTO.setId(timeSheet.getId());
         timeSheetDTO.setInTime(timeSheet.getInTime());
         timeSheetDTO.setCheckIn(timeSheet.getCheckIn());

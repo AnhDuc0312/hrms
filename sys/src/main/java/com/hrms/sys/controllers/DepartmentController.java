@@ -4,6 +4,8 @@ import com.hrms.sys.dtos.DepartmentDTO;
 import com.hrms.sys.models.Department;
 import com.hrms.sys.services.department.DepartmentService;
 import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -12,9 +14,10 @@ import java.util.List;
 
 @RestController
 @RequestMapping("${api.prefix}/departments")
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class DepartmentController {
     private final DepartmentService departmentService;
+
 
     @GetMapping("")
     public ResponseEntity<List<Department>> getAllDepartments() {
