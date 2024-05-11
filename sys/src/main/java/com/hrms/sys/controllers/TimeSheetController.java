@@ -18,7 +18,7 @@ public class TimeSheetController {
 
     private final TimeSheetService timeSheetService;
     @PostMapping("/check-in")
-    public ResponseEntity<String> checkIn(@RequestBody TimeSheetDTO timeSheetDTO, HttpServletRequest request) {
+    public ResponseEntity<?> checkIn(@RequestBody TimeSheetDTO timeSheetDTO, HttpServletRequest request) {
         // Lấy địa chỉ IP của người dùng
 //        String clientIp = request.getRemoteAddr();
 
@@ -30,7 +30,8 @@ public class TimeSheetController {
         // Tiếp tục xử lý chấm công nếu địa chỉ IP hợp lệ
         try {
             timeSheetService.checkIn(timeSheetDTO);
-            return ResponseEntity.ok("Check-in successful");
+            String jsonResponse = "{\"message\": \"Check-in successful\"}";
+            return new ResponseEntity<>(jsonResponse, HttpStatus.OK);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error: " + e.getMessage());
         }
@@ -49,7 +50,8 @@ public class TimeSheetController {
         // Tiếp tục xử lý chấm công nếu địa chỉ IP hợp lệ
         try {
             timeSheetService.checkOut(timeSheetDTO);
-            return ResponseEntity.ok("Check-out successful");
+            String jsonResponse = "{\"message\": \"Check-out successful\"}";
+            return new ResponseEntity<>(jsonResponse, HttpStatus.OK);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error: " + e.getMessage());
         }

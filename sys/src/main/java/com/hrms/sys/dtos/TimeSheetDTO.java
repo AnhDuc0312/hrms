@@ -13,8 +13,8 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class TimeSheetDTO {
 
-    @JsonProperty("id")
-    private Long id;
+//    @JsonProperty("id")
+//    private Long id;
     @JsonProperty("in_time")
     private LocalDateTime inTime;
 
@@ -47,4 +47,7 @@ public class TimeSheetDTO {
 
     @JsonProperty("type_work")
     private String typeWork;
+
+    @JsonProperty("code")
+    private String code;
 }

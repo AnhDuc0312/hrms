@@ -90,13 +90,15 @@ public class WebSecurityConfig {
                             .requestMatchers(DELETE,
                                     String.format("%s/overtime**",apiPrefix)).hasRole(Role.ADMIN)
                             .requestMatchers(GET,
-                                    String.format("%s/remote**",apiPrefix)).permitAll()
+                                    String.format("%s/remotes**",apiPrefix)).permitAll()
+                            .requestMatchers(GET,
+                                    String.format("%s/remotes/**",apiPrefix)).permitAll()
                             .requestMatchers(POST,
-                                    String.format("%s/remote**",apiPrefix)).permitAll()
+                                    String.format("%s/remotes**",apiPrefix)).permitAll()
                             .requestMatchers(PUT,
-                                    String.format("%s/remote**",apiPrefix)).hasRole(Role.ADMIN)
+                                    String.format("%s/remotes**",apiPrefix)).hasRole(Role.ADMIN)
                             .requestMatchers(DELETE,
-                                    String.format("%s/remote**",apiPrefix)).hasRole(Role.ADMIN)
+                                    String.format("%s/remotes**",apiPrefix)).hasRole(Role.ADMIN)
                             .requestMatchers(GET,
                                     String.format("%s/payroll**",apiPrefix)).permitAll()
                             .requestMatchers(POST,

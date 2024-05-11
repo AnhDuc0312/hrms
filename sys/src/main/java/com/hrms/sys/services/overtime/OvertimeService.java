@@ -1,8 +1,11 @@
 package com.hrms.sys.services.overtime;
 
 import com.hrms.sys.dtos.OvertimeDTO;
+import com.hrms.sys.models.Employee;
 import com.hrms.sys.models.Overtime;
+import com.hrms.sys.models.Remote;
 import com.hrms.sys.models.User;
+import com.hrms.sys.repositories.EmployeeRepository;
 import com.hrms.sys.repositories.OvertimeRepository;
 import com.hrms.sys.repositories.UserRepository;
 import com.hrms.sys.services.overtime.IOvertimeService;
@@ -11,6 +14,7 @@ import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -21,28 +25,70 @@ public class OvertimeService implements IOvertimeService {
     private final OvertimeRepository overtimeRepository;
     private final UserRepository userRepository;
     private final ModelMapper modelMapper;
+    private final EmployeeRepository employeeRepository;
 
     private static final int MAX_OT_HOURS_PER_MONTH = 30;
     private static final int MAX_OT_HOURS_PER_SESSION = 3;
     private static final int MAX_OT_REQUESTS_PER_WEEK = 2;
 
     @Override
-    public Overtime createOvertime(OvertimeDTO overtimeDTO, Long id) throws Exception {
-        Optional<User> userOptional = userRepository.findById(id);
+    public Overtime createOvertime(String username , OvertimeDTO overtimeDTO) throws Exception {
+        LocalDateTime currentDate = LocalDateTime.now();
 
-        if (userOptional.isPresent()) {
-            User user = userOptional.get();
+        if (overtimeDTO.getFromDatetime().isBefore(currentDate.plusDays(1))) {
+            throw new RuntimeException("Leave request must be created at least 1 day in advance.");
+        }
 
-            Overtime overtime = modelMapper.map(overtimeDTO, Overtime.class);
-            overtime.setUser(user);
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        Long userId = user.getId();
+        //Lấy thông tin nhân viên
+        Employee employee = employeeRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Employee not found"));
 
-            if (isAutoApprove(overtime)) {
-                overtime.setStatus("Approved");
-            }
+        float remainingPaidRemoteDays = employee.getRemainingRemoteDays();
 
-            return overtimeRepository.save(overtime);
-        } else {
-            throw new Exception("User not found");
+        //tính time nghỉ
+        LocalDate overtimeStartDate = overtimeDTO.getFromDatetime().toLocalDate();
+        LocalDate overtimeEndDate = overtimeDTO.getToDatetime().toLocalDate();
+
+        long remoteDays = overtimeStartDate.datesUntil(overtimeEndDate.plusDays(1)).count();
+
+        if (remainingPaidRemoteDays >= remoteDays) {
+            Overtime overtime = Overtime.builder()
+                    .fromDatetime(overtimeDTO.getFromDatetime())
+                    .toDatetime((overtimeDTO.getToDatetime()))
+                    .reason(overtimeDTO.getReason())
+                    .comment(overtimeDTO.getComment())
+                    .evident(overtimeDTO.getEvident())
+                    .user(user)
+//                    .type(remoteDTO.getType())
+                    .approver(null)
+                    .workedHours(null)
+                    .status("Approved")
+                    .build();
+            overtimeRepository.save(overtime);
+
+            float updatedRemainingPaidRemoteDays = remainingPaidRemoteDays - remoteDays;
+            employee.setRemainingRemoteDays(updatedRemainingPaidRemoteDays);
+            employeeRepository.save(employee);
+
+            return overtime;
+        }else {
+            Overtime overtime = Overtime.builder()
+                    .fromDatetime(overtimeDTO.getFromDatetime())
+                    .toDatetime((overtimeDTO.getToDatetime()))
+                    .reason(overtimeDTO.getReason())
+                    .comment(overtimeDTO.getComment())
+                    .evident(overtimeDTO.getEvident())
+                    .user(user)
+//                    .type(remoteDTO.getType())
+                    .approver(null)
+                    .workedHours(null)
+                    .status("Pending")
+                    .build();
+            overtimeRepository.save(overtime);
+            return overtime;
         }
     }
 

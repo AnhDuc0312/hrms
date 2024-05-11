@@ -132,7 +132,7 @@ public class EmployeeService implements IEmployeeService {
                     employee.getPosition(),
                     employee.getEducation(),
                     employee.getUser().getUsername(),
-                    employee.getUser().getDepartment().getName(),
+                    employee.getUser().getDepartment() != null ? employee.getUser().getDepartment().getName() : "chưa xét",
                     0
                     );
         } else {

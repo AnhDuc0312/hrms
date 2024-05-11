@@ -2,10 +2,14 @@ package com.hrms.sys.controllers;
 
 import com.hrms.sys.dtos.OvertimeDTO;
 import com.hrms.sys.models.Overtime;
+import com.hrms.sys.models.Remote;
 import com.hrms.sys.services.overtime.OvertimeService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -19,14 +23,18 @@ public class OvertimeController {
 
 
     @PostMapping("/create")
-    public ResponseEntity<?> createOvertime(@RequestBody OvertimeDTO overtimeDTO) {
-//        try {
-//            Overtime createdOvertime = overtimeService.createOvertime(overtimeDTO);
-//            return ResponseEntity.status(HttpStatus.CREATED).body(createdOvertime);
-//        } catch (Exception e) {
-//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("");
-//        }
-        return null;
+    public ResponseEntity<?> createOvertime(@RequestBody OvertimeDTO overtimeDTO) throws Exception {
+        try {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            Object principal = authentication.getPrincipal();
+            UserDetails userDetails = (UserDetails) principal;
+            String username = userDetails.getUsername();
+            Overtime createdOvertime = overtimeService.createOvertime(username, overtimeDTO);
+            HttpStatus status = (createdOvertime.getStatus().equals("Approved")) ? HttpStatus.CREATED : HttpStatus.OK;
+            return ResponseEntity.status(status).body(createdOvertime);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body("Đăng kí leave trước 1 ngày"); // Trả về lỗi 400 nếu có ngoại lệ
+        }
     }
 
     @GetMapping("/user/{userId}")

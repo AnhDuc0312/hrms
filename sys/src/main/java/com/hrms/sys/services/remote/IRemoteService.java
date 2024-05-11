@@ -10,7 +10,7 @@ public interface IRemoteService {
 
     public Remote getRemoteById(long id) throws Exception;
 
-    public Remote createRemote(RemoteDTO remoteDTO) throws Exception;
+    public Remote createRemote(String username ,RemoteDTO remoteDTO) throws Exception;
 
     public Remote updateRemote(long id, RemoteDTO remoteDTO) throws Exception;
 
@@ -19,4 +19,6 @@ public interface IRemoteService {
     public void approveRemote(long id) throws Exception;
 
     public void rejectRemote(long id) throws Exception;
+
+    List<Remote> getRemoteByUserId(long userId) throws Exception;
 }

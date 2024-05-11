@@ -16,6 +16,8 @@ public interface TimeSheetRepository extends JpaRepository<TimeSheet, Long> {
 
     // Tìm danh sách bảng chấm công của một người dùng
     List<TimeSheet> findByUserId(Long userId);
+    //Tìm kiếm timesheet của người dùng
+    TimeSheet findByCode(String code);
 
     // Tìm danh sách bảng chấm công theo ngày
     List<TimeSheet> findByRecordDate(LocalDate recordDate);
@@ -27,7 +29,7 @@ public interface TimeSheetRepository extends JpaRepository<TimeSheet, Long> {
     List<TimeSheet> findByRecordDateOrderByCheckInAsc(LocalDate date);
 
     // Lấy danh sách time sheet theo userId và sắp xếp theo ngày
-    List<TimeSheet> findByUserIdOrderByRecordDate(Long userId);
+    List<TimeSheet> findByUserIdOrderByRecordDateDesc(Long userId);
 
     List<TimeSheet> findByRecordDateBetween(LocalDate startDate, LocalDate endDate);
 }

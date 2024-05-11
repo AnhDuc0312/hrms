@@ -6,7 +6,7 @@ import com.hrms.sys.models.Overtime;
 import java.util.List;
 
 public interface IOvertimeService {
-    Overtime createOvertime(OvertimeDTO overtimeDTO , Long id) throws Exception;
+    Overtime createOvertime(String username ,OvertimeDTO overtimeDTO ) throws Exception;
 
     List<Overtime> getAllOvertimesByUserId(Long userId) throws Exception;
 

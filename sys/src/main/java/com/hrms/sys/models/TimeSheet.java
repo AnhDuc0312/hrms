@@ -38,7 +38,7 @@ public class TimeSheet {
     @Column(name = "leave_hours")
     private float leaveHours;
 
-    @OneToOne
+    @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;
 
@@ -53,6 +53,9 @@ public class TimeSheet {
 
     @Column(name = "type_work")
     private String typeWork;
+
+    @Column(name = "code")
+    private String code;
 
 
     // Tính số giờ làm việc dựa trên giờ vào và ra

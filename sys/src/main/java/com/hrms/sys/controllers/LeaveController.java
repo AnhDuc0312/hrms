@@ -34,7 +34,7 @@ public class LeaveController {
             String username = userDetails.getUsername();
             Leave createdLeave = leaveService.createLeave(username, leaveDTO);
             HttpStatus status = (createdLeave.getStatus().equals("Approved")) ? HttpStatus.CREATED : HttpStatus.OK;
-            return ResponseEntity.status(status).body("Successfully");
+            return ResponseEntity.status(status).body(createdLeave);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body("Đăng kí leave trước 1 ngày"); // Trả về lỗi 400 nếu có ngoại lệ
         }

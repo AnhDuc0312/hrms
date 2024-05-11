@@ -41,6 +41,8 @@ public class User extends BaseEntity implements UserDetails {
     @JoinColumn(name = "department_id")
     private Department department;
 
+//    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+//    private List<Remote> remotes = new ArrayList<>();
 
 
     @Override

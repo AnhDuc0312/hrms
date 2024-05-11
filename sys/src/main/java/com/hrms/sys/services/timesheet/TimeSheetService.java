@@ -60,14 +60,24 @@ public class TimeSheetService implements ITimeSheetService{
 
 
     public void checkIn(TimeSheetDTO timeSheetDTO) throws NotFoundException {
-        TimeSheet timeSheet = createTimeSheetFromDTO(timeSheetDTO);
-        timeSheetRepository.save(timeSheet);
+        User user = userService.getUserById(timeSheetDTO.getUserId());
+
+        String code = LocalDate.now().toString() + user.getUsername();
+        TimeSheet timeSheetCheck = timeSheetRepository.findByCode(code);
+        if (timeSheetCheck == null ) {
+            TimeSheet timeSheet = createTimeSheetFromDTO(timeSheetDTO);
+            timeSheetRepository.save(timeSheet);
+        } else {
+            return ;
+        }
+
 //        TimeSheet timeSheet = TimeSheet.builder()
 //                .inTime(LocalDateTime.now())
 //                .status("Checked-in")
 //                // Thêm các trường dữ liệu khác từ timeSheetDTO
 //                .build();
 //        timeSheetRepository.save(timeSheet);
+        return;
     }
 
     public void checkOut(TimeSheetDTO timeSheetDTO) throws NotFoundException {
@@ -87,6 +97,7 @@ public class TimeSheetService implements ITimeSheetService{
     private TimeSheet createTimeSheetFromDTO(TimeSheetDTO timeSheetDTO) throws NotFoundException {
         TimeSheet timeSheet = new TimeSheet();
         fillTimeSheetFromDTO(timeSheet, timeSheetDTO);
+
         timeSheet.setCheckIn(LocalDateTime.now());
         timeSheet.setInTime(LocalDateTime.now());
         return timeSheet;
@@ -94,8 +105,11 @@ public class TimeSheetService implements ITimeSheetService{
 
     // Phương thức để cập nhật thông tin của TimeSheet từ DTO khi check-out hoặc update
     private TimeSheet updateTimeSheetFromDTO(TimeSheetDTO timeSheetDTO) throws NotFoundException {
-        TimeSheet timeSheet = timeSheetRepository.findById(timeSheetDTO.getId())
-                .orElseThrow(() -> new NotFoundException("Time sheet not found with id: " + timeSheetDTO.getId()));
+        User user = userService.getUserById(timeSheetDTO.getUserId());
+
+        String code = LocalDate.now().toString() + user.getUsername();
+        TimeSheet timeSheet = timeSheetRepository.findByCode(code);
+//                .orElseThrow(() -> new NotFoundException("Time sheet not found with id: " + timeSheetDTO.getCode()));
         updateFieldsFromDTO(timeSheet, timeSheetDTO);
         timeSheet.setCheckOut(LocalDateTime.now());
         timeSheet.setOutTime(LocalDateTime.now());
@@ -131,6 +145,7 @@ public class TimeSheetService implements ITimeSheetService{
         // Lấy thông tin User từ UserService và set vào TimeSheet
         User user = userService.getUserById(timeSheetDTO.getUserId());
         timeSheet.setUser(user);
+        timeSheet.setCode(LocalDate.now().toString() + user.getUsername());
     }
 
     // Phương thức để cập nhật các trường thông tin từ DTO vào time sheet
@@ -145,7 +160,7 @@ public class TimeSheetService implements ITimeSheetService{
 
     // Service để lấy tất cả time sheet và sắp xếp theo ngày và thời gian
     public List<TimeSheetDTO> getAllTimeSheetsSortedByDateTime() {
-        List<TimeSheet> timeSheets = timeSheetRepository.findAll(Sort.by(Sort.Direction.ASC, "recordDate", "checkIn"));
+        List<TimeSheet> timeSheets = timeSheetRepository.findAll(Sort.by(Sort.Direction.DESC, "recordDate", "checkIn"));
         return mapTimeSheetsToDTOs(timeSheets);
     }
 
@@ -156,7 +171,7 @@ public class TimeSheetService implements ITimeSheetService{
     }
     // Service để lấy time sheet theo userId và sắp xếp theo ngày
     public List<TimeSheetDTO> getTimeSheetsByUserIdAndSortByDate(Long userId) {
-        List<TimeSheet> timeSheets = timeSheetRepository.findByUserIdOrderByRecordDate(userId);
+        List<TimeSheet> timeSheets = timeSheetRepository.findByUserIdOrderByRecordDateDesc(userId);
         return mapTimeSheetsToDTOs(timeSheets);
     }
 
@@ -175,7 +190,7 @@ public class TimeSheetService implements ITimeSheetService{
         String formattedInTime = timeSheet.getInTime().format(formatter); // Định dạng thành chuỗi
 
 
-        timeSheetDTO.setId(timeSheet.getId());
+//        timeSheetDTO.setId(timeSheet.getId());
         timeSheetDTO.setInTime(timeSheet.getInTime());
         timeSheetDTO.setCheckIn(timeSheet.getCheckIn());
         timeSheetDTO.setOutTime(timeSheet.getOutTime());
@@ -187,7 +202,7 @@ public class TimeSheetService implements ITimeSheetService{
         timeSheetDTO.setOvertimeHours(timeSheetDTO.getOvertimeHours());
         timeSheetDTO.setStatus(timeSheet.getStatus());
         timeSheetDTO.setTypeWork(timeSheet.getTypeWork());
-
+        timeSheetDTO.setCode(timeSheet.getCode());
         return timeSheetDTO;
     }
     public TotalHoursDTO getTotalHoursForLastFifteenDays(Long userId) {
