@@ -133,6 +133,8 @@ public class EmployeeService implements IEmployeeService {
                     employee.getEducation(),
                     employee.getUser().getUsername(),
                     employee.getUser().getDepartment() != null ? employee.getUser().getDepartment().getName() : "chưa xét",
+                    employee.getBenifit() !=null ? employee.getBenifit().getAllowance() : 0 ,
+                    employee.getHourlyWage(),
                     0
                     );
         } else {
@@ -140,16 +142,47 @@ public class EmployeeService implements IEmployeeService {
         }
     }
 
-    @Override
-    public void deleteEmployee(long id) throws Exception {
+    public EmployeeResponse getEmployeeByUsername(String username) throws Exception {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        Optional<Employee> employeeOptional = employeeRepository.findByUser(user);
+        if (employeeOptional.isPresent()) {
+            Employee employee = employeeOptional.get();
+            return new EmployeeResponse(
+                    employee.getFullName(),
+                    employee.getGender(),
+                    employee.getDateOfBirth(),
+                    employee.getEmail(),
+                    employee.getPhoneNumber(),
+                    employee.getAddress(),
+                    employee.getContactStartDate(),
+                    employee.getContactEndDate(),
+                    employee.getPosition(),
+                    employee.getEducation(),
+                    employee.getUser().getUsername(),
+                    employee.getUser().getDepartment() != null ? employee.getUser().getDepartment().getName() : "chưa xét",
+                    employee.getBenifit() !=null ? employee.getBenifit().getAllowance() : 0 ,
+                    employee.getHourlyWage(),
+                    0
+            );
+        } else {
+            throw new Exception("Employee not found with ID: " + username);
+        }
+    }
 
-        Optional<Employee> employeeOptional = employeeRepository.findById(id);
+    @Override
+    public void deleteEmployee(String username) throws Exception {
+
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        Optional<Employee> employeeOptional = employeeRepository.findByUser(user);
+
         employeeOptional.ifPresent(employee -> {
             // Xóa người dùng liên kết với nhân viên trước
-            User user = employee.getUser();
-            if (user != null) {
+            User userRe = employee.getUser();
+            if (userRe != null) {
                 employee.setUser(null);
-                userRepository.delete(user);
+                userRepository.delete(userRe);
             }
             // Xóa nhân viên sau
             employeeRepository.delete(employee);
@@ -159,22 +192,17 @@ public class EmployeeService implements IEmployeeService {
     }
 
     @Override
-    public Employee updateEmployee(long id, EmployeeDTO employeeDTO) throws Exception {
-        Optional<Employee> employeeOptional = employeeRepository.findById(id);
+    public Employee updateEmployee(String username, EmployeeDTO employeeDTO) throws Exception {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        Optional<Employee> employeeOptional = employeeRepository.findByUser(user);
         if (employeeOptional.isPresent()) {
             Employee employee = employeeOptional.get();
 
             // Cập nhật thông tin từ employeeDTO vào đối tượng Employee
-            employee.setFullName(employeeDTO.getFullName());
-            employee.setGender(employeeDTO.getGender());
             employee.setEmail(employeeDTO.getEmail());
             employee.setAddress(employeeDTO.getAddress());
             employee.setPhoneNumber(employeeDTO.getPhoneNumber());
-            employee.setDateOfBirth(employeeDTO.getDateOfBirth());
-            employee.setContactStartDate(employeeDTO.getContactStartDate());
-            employee.setContactEndDate(employeeDTO.getContactEndDate());
-            employee.setPosition(employeeDTO.getPosition());
-            employee.setEducation(employeeDTO.getEducation());
 
             // Lưu và trả về nhân viên đã được cập nhật
             return employeeRepository.save(employee);

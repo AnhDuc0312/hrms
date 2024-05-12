@@ -1,13 +1,19 @@
 package com.hrms.sys.repositories;
 
 import com.hrms.sys.models.Employee;
+import com.hrms.sys.models.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.Optional;
+
 public interface EmployeeRepository extends JpaRepository<Employee, Long> {
+//    Optional<Employee> findByUsername(String username);
+    Optional<Employee> findByUser(User user);
+
     Page<Employee> findByDepartmentIdAndFullNameContainingIgnoreCaseAndUser_UsernameContainingIgnoreCase(Long departmentId, String keyword, String username, Pageable pageable);
 
     Page<Employee> findByDepartmentIdAndFullNameContainingIgnoreCase(Long departmentId, String keyword, Pageable pageable);

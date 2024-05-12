@@ -120,12 +120,15 @@ public class UserController {
     @PutMapping("/{id}/change-password")
     public ResponseEntity<String> changePassword(
             @PathVariable("id") Long id,
-            @RequestParam("password") String password) {
+            @RequestParam("oldPassword") String oldPassword,
+            @RequestParam("newPassword") String newPassword) {
         try {
-            userService.changePassword(id, password);
-            return ResponseEntity.ok().body("Password changed successfully");
+            userService.changePassword(id, oldPassword, newPassword);
+            return ResponseEntity.ok().body("{\"message\": \"Password updated successfully\"}");
+        } catch (InvalidDataException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 

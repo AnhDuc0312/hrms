@@ -47,4 +47,7 @@ public class Leave extends BaseEntity{
 
     private String status;
 
+    @Column(name = "code")
+    private String code;
+
 }

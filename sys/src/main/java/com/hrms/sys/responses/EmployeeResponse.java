@@ -52,6 +52,12 @@ public class EmployeeResponse {
     @JsonProperty("department")
     private String department;
 
+    @JsonProperty("allowance")
+    private Float allowance;
+
+    @JsonProperty("hourly_wage")
+    private Float hourlyWage;
+
     private int totalPages;
 
     public EmployeeResponse(String fullName, String gender, LocalDate dateOfBirth, String email, String phoneNumber, String address, LocalDate contactStartDate, LocalDate contactEndDate, String position, String education, String username) {
@@ -72,6 +78,8 @@ public class EmployeeResponse {
                 .username(employee.getUser().getUsername())
                 .phoneNumber(employee.getPhoneNumber())
                 .department(employee.getDepartment().getName())
+                .allowance(employee.getBenifit() !=null ? employee.getBenifit().getAllowance() : 0 )
+                .hourlyWage(employee.getHourlyWage())
                 .build();
 
         return employeeResponse;

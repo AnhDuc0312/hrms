@@ -3,12 +3,10 @@ package com.hrms.sys.services.overtime;
 import com.hrms.sys.dtos.OvertimeDTO;
 import com.hrms.sys.models.Employee;
 import com.hrms.sys.models.Overtime;
-import com.hrms.sys.models.Remote;
 import com.hrms.sys.models.User;
 import com.hrms.sys.repositories.EmployeeRepository;
 import com.hrms.sys.repositories.OvertimeRepository;
 import com.hrms.sys.repositories.UserRepository;
-import com.hrms.sys.services.overtime.IOvertimeService;
 import lombok.AllArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
@@ -38,6 +36,8 @@ public class OvertimeService implements IOvertimeService {
         if (overtimeDTO.getFromDatetime().isBefore(currentDate.plusDays(1))) {
             throw new RuntimeException("Leave request must be created at least 1 day in advance.");
         }
+
+
 
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
@@ -94,7 +94,10 @@ public class OvertimeService implements IOvertimeService {
 
     @Override
     public List<Overtime> getAllOvertimesByUserId(Long userId) throws Exception {
-        return null;
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new Exception("User not found"));
+
+        return overtimeRepository.findByUser(user);
     }
 
     @Override

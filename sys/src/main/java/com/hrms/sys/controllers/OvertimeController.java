@@ -38,7 +38,7 @@ public class OvertimeController {
     }
 
     @GetMapping("/user/{userId}")
-    public ResponseEntity<?> getAllOvertimesByUserId(@PathVariable Long userId) {
+    public ResponseEntity<?> getAllOvertimesByUserId(@PathVariable long userId) {
         try {
             List<Overtime> overtimes = overtimeService.getAllOvertimesByUserId(userId);
             return ResponseEntity.ok(overtimes);

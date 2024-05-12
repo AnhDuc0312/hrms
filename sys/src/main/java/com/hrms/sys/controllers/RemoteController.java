@@ -13,6 +13,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @AllArgsConstructor
@@ -70,7 +71,7 @@ public class RemoteController {
             HttpStatus status = (createdRemote.getStatus().equals("Approved")) ? HttpStatus.CREATED : HttpStatus.OK;
             return ResponseEntity.status(status).body(createdRemote);
         } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body("Đăng kí leave trước 1 ngày"); // Trả về lỗi 400 nếu có ngoại lệ
+            return ResponseEntity.badRequest().body("Thời gian lỗi, xin kiểm tra lại !"); // Trả về lỗi 400 nếu có ngoại lệ
         }
     }
 
@@ -115,6 +116,17 @@ public class RemoteController {
             return ResponseEntity.ok().build();
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @GetMapping("/statistics")
+    public ResponseEntity<Map<String, Long>> getRemoteStatisticsForToday() {
+        try {
+            Map<String, Long> statistics = remoteService.getRemoteStatisticsForToday();
+            return ResponseEntity.ok(statistics);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).build();
         }
     }
 }

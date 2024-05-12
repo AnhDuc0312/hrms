@@ -50,4 +50,7 @@ public class InOutForget extends BaseEntity{
 
     private String status;
 
+    @Column(name = "code")
+    private String code;
+
 }

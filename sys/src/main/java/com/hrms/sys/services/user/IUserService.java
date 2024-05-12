@@ -17,7 +17,7 @@ public interface IUserService {
 
     User getUser(Long id) throws Exception;
 
-    void changePassword(Long id, String password) throws Exception;
+    void changePassword(Long id, String oldPassword, String newPassword)throws Exception;
 
     void deleteUser(Long id) throws Exception;
 

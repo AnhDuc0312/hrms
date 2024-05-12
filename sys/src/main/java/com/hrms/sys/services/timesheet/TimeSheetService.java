@@ -97,7 +97,7 @@ public class TimeSheetService implements ITimeSheetService{
     private TimeSheet createTimeSheetFromDTO(TimeSheetDTO timeSheetDTO) throws NotFoundException {
         TimeSheet timeSheet = new TimeSheet();
         fillTimeSheetFromDTO(timeSheet, timeSheetDTO);
-
+        timeSheet.setTypeWork(timeSheetDTO.getTypeWork());
         timeSheet.setCheckIn(LocalDateTime.now());
         timeSheet.setInTime(LocalDateTime.now());
         return timeSheet;

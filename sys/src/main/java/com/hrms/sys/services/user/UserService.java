@@ -4,9 +4,11 @@ import com.hrms.sys.dtos.UpdateUserDTO;
 import com.hrms.sys.dtos.UserRegisterDTO;
 import com.hrms.sys.exceptions.InvalidDataException;
 import com.hrms.sys.exceptions.NotFoundException;
+import com.hrms.sys.models.Employee;
 import com.hrms.sys.models.Role;
 import com.hrms.sys.models.Token;
 import com.hrms.sys.models.User;
+import com.hrms.sys.repositories.EmployeeRepository;
 import com.hrms.sys.repositories.RoleRepository;
 import com.hrms.sys.repositories.TokenRepository;
 import com.hrms.sys.repositories.UserRepository;
@@ -39,6 +41,7 @@ public class UserService implements IUserService {
     private final JwtTokenUtil jwtTokenUtil;
     private final AuthenticationManager authenticationManager;
     private final TokenRepository tokenRepository;
+    private final EmployeeRepository employeeRepository;
 
     @Override
     public List<User> getUsers() throws Exception {
@@ -52,16 +55,21 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public void changePassword(Long id, String newPassword) throws Exception {
+    public void changePassword(Long id, String oldPassword, String newPassword) throws Exception {
         User existingUser = userRepository.findById(id)
                 .orElseThrow(() -> new InvalidDataException("User not found"));
 
-        String encodePassword = passwordEncoder.encode(newPassword);
+        // Kiểm tra mật khẩu cũ
+        if (!passwordEncoder.matches(oldPassword, existingUser.getPassword())) {
+            throw new InvalidDataException("Mật khẩu cũ không chính xác");
+        }
 
-        existingUser.setPassword(encodePassword);
+        String encodedNewPassword = passwordEncoder.encode(newPassword);
+        existingUser.setPassword(encodedNewPassword);
 
         userRepository.save(existingUser);
     }
+
 
     @Override
     public void deleteUser(Long id) throws Exception {
@@ -70,6 +78,8 @@ public class UserService implements IUserService {
 
     @Override
     public User resetUser(String username) throws Exception {
+//        Employee employee = employeeRepository.findById(id).orElseThrow(() -> new InvalidDataException("Employee not found"));
+
         Optional<User> optionalUser = userRepository.findByUsername(username);
         if (optionalUser.isPresent()) {
             User user = optionalUser.get();
@@ -79,8 +89,9 @@ public class UserService implements IUserService {
 
             // Chuyển đổi ngày hiện tại thành chuỗi theo định dạng "yyyyMMdd"
             String newPassword = currentDate.format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+            String encodeNewPass = passwordEncoder.encode(newPassword);
 
-            user.setPassword(newPassword);
+            user.setPassword(encodeNewPass);
             // Lưu người dùng với mật khẩu mới
             userRepository.save(user);
             return user;

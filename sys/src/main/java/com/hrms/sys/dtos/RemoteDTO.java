@@ -27,6 +27,9 @@ public class RemoteDTO {
     @JsonProperty("reason")
     private String reason;
 
+    @JsonProperty("type")
+    private String type;
+
     @JsonProperty("evident")
     private String evident;
 

@@ -83,6 +83,8 @@ public class WebSecurityConfig {
                                     String.format("%s/leaves**",apiPrefix)).hasRole(Role.ADMIN)
                             .requestMatchers(GET,
                                     String.format("%s/overtimes**",apiPrefix)).permitAll()
+                            .requestMatchers(GET,
+                                    String.format("%s/overtimes/**",apiPrefix)).permitAll()
                             .requestMatchers(POST,
                                     String.format("%s/overtimes**",apiPrefix)).permitAll()
                             .requestMatchers(PUT,

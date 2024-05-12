@@ -16,7 +16,7 @@ public interface IEmployeeService {
 
     EmployeeResponse getEmployeeById(Long id) throws Exception;
 
-    void deleteEmployee(long id) throws Exception;
+    void deleteEmployee(String username) throws Exception;
 
-    Employee updateEmployee(long id, EmployeeDTO employeeDTO) throws Exception;
+    Employee updateEmployee(String username, EmployeeDTO employeeDTO) throws Exception;
 }

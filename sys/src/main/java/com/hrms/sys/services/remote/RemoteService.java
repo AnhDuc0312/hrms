@@ -13,9 +13,12 @@ import lombok.AllArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.time.*;
+import java.time.temporal.TemporalAdjusters;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @AllArgsConstructor
@@ -32,7 +35,9 @@ public class RemoteService implements IRemoteService {
 
     @Override
     public List<Remote> getAllRemotes() throws Exception {
-        return remoteRepository.findAll();
+        List<Remote> remotes = remoteRepository.findAll();
+        Collections.reverse(remotes);
+        return remotes;
     }
 
     @Override
@@ -44,7 +49,7 @@ public class RemoteService implements IRemoteService {
     public List<Remote> getRemoteByUserId(long userId) throws Exception {
         User user = userRepository.findById(userId);
 
-        return remoteRepository.findByUser(user);
+        return remoteRepository.findAllByUserOrderByCreateAtDesc(user);
     }
 
     @Override
@@ -68,10 +73,44 @@ public class RemoteService implements IRemoteService {
         //tính time nghỉ
         LocalDate remoteStartDate = remoteDTO.getFromDatetime().toLocalDate();
         LocalDate remoteEndDate = remoteDTO.getToDatetime().toLocalDate();
+        // Kiểm tra xem thời gian bắt đầu và kết thúc có trùng nhau không
+
+
+        LocalDateTime remoteStartDateTime = remoteDTO.getFromDatetime();
+        LocalDateTime remoteEndDateTime = remoteDTO.getToDatetime();
+        // Chuyển đổi LocalDateTime sang LocalTime
+        LocalTime remoteStartTime = remoteStartDateTime.toLocalTime();
+        LocalTime remoteEndTime = remoteEndDateTime.toLocalTime();
+
+        if (remoteStartTime.getHour() < 8 || remoteEndTime.getHour() >= 18) {
+            throw new RuntimeException("Remote work must start after 8 AM and end before 6 PM.");
+        }
+
+        if (remoteStartDateTime.equals(remoteEndDateTime)) {
+            throw new RuntimeException("Remote start and end date cannot be the same.");
+        }
+
+        // Kiểm tra xem thời gian bắt đầu và kết thúc có trùng với bất kỳ yêu cầu nghỉ phép nào khác không
+        List<Remote> overlappingRemotes = remoteRepository.findOverlappingRemotes(user, remoteDTO.getFromDatetime(), remoteDTO.getToDatetime());
+        if (!overlappingRemotes.isEmpty()) {
+            throw new RuntimeException("The remote request overlaps with existing remote requests.");
+        }
+
+        // Tính thời điểm trong tuần tới
+        LocalDateTime nextWeek = currentDate.plusDays(7);
+//        LocalDateTime nextWeek = currentDate.toLocalDate().with(TemporalAdjusters.next(DayOfWeek.MONDAY)).atStartOfDay();
+
+        // Kiểm tra xem người dùng đã đăng ký remote gần đây nhất cách đây 1 tuần hay không
+        List<Remote> recentRemotes = remoteRepository.findRecentRemotes(user, currentDate, nextWeek);
+        boolean hasRecentRemote = !recentRemotes.isEmpty();
 
         long remoteDays = remoteStartDate.datesUntil(remoteEndDate.plusDays(1)).count();
 
-        if (remainingPaidRemoteDays >= remoteDays) {
+        // tính số giờ làm việc
+        float workedHours = Duration.between(remoteStartTime, remoteEndTime).toHours();
+
+
+        if (remainingPaidRemoteDays >= remoteDays && !hasRecentRemote && remoteDTO.getType().equals("1")) {
             Remote remote = Remote.builder()
                     .fromDatetime(remoteDTO.getFromDatetime())
                     .toDatetime((remoteDTO.getToDatetime()))
@@ -79,12 +118,14 @@ public class RemoteService implements IRemoteService {
                     .comment(remoteDTO.getComment())
                     .evident(remoteDTO.getEvident())
                     .user(user)
-//                    .type(remoteDTO.getType())
+                    .type(remoteDTO.getType())
                     .approver(null)
-                    .workedHours(null)
+                    .workedHours(workedHours)
                     .status("Approved")
                     .build();
             remoteRepository.save(remote);
+
+
 
             float updatedRemainingPaidRemoteDays = remainingPaidRemoteDays - remoteDays;
             employee.setRemainingRemoteDays(updatedRemainingPaidRemoteDays);
@@ -99,7 +140,7 @@ public class RemoteService implements IRemoteService {
                     .comment(remoteDTO.getComment())
                     .evident(remoteDTO.getEvident())
                     .user(user)
-//                    .type(remoteDTO.getType())
+                    .type(remoteDTO.getType())
                     .approver(null)
                     .workedHours(null)
                     .status("Pending")
@@ -135,5 +176,21 @@ public class RemoteService implements IRemoteService {
     public void rejectRemote(long id) throws Exception{
         Remote remote = remoteRepository.findById(id).orElse(null);
 
+    }
+
+    @Override
+    public Map<String, Long> getRemoteStatisticsForToday() throws Exception {
+        LocalDate today = LocalDate.now();
+        LocalDateTime startOfDay = today.atStartOfDay();
+        LocalDateTime endOfDay = today.atTime(23, 59, 59);
+
+        long totalCount = remoteRepository.countAllByCreatedAtBetween(startOfDay, endOfDay);
+        long pendingCount = remoteRepository.countAllByStatusAndCreateAtBetween("Pending", startOfDay, endOfDay);
+
+        Map<String, Long> statistics = new HashMap<>();
+        statistics.put("total", totalCount);
+        statistics.put("pending", pendingCount);
+
+        return statistics;
     }
 }

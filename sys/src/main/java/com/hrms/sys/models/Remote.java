@@ -38,6 +38,8 @@ public class Remote extends BaseEntity{
 
     private String evident;
 
+    private String type;
+
 
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -47,6 +49,9 @@ public class Remote extends BaseEntity{
     private String comment;
 
     private String status;
+
+    @Column(name = "code")
+    private String code;
 
 
 

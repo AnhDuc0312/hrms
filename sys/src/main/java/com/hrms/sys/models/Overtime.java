@@ -48,4 +48,7 @@ public class Overtime extends BaseEntity {
     @Column(name = "worked_hours")
     private Float workedHours;
 
+    @Column(name = "code")
+    private String code;
+
 }

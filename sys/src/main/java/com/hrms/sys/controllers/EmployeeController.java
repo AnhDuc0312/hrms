@@ -102,23 +102,43 @@ public class EmployeeController {
 
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<?> updateEmployee(
-            @PathVariable("id") Long employeeId
-    ){
-        return ResponseEntity.badRequest().body("");
+    @GetMapping("/user/{username}")
+    public ResponseEntity<?> getEmployeeByUsername(
+            @PathVariable("username") String username
+    ) {
+        try {
+            EmployeeResponse employee = employeeService.getEmployeeByUsername(username);
+            return ResponseEntity.ok().body(employee);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Employee not found with ID: " + username);
+        }
 
     }
 
-    @DeleteMapping("/{id}")
+    @PutMapping("/{username}")
+    public ResponseEntity<?> updateEmployee(
+            @PathVariable("username") String username,
+            @RequestBody EmployeeDTO employeeDTO
+    ) {
+        try {
+            // Gọi service để cập nhật thông tin của nhân viên với ID được cung cấp
+            employeeService.updateEmployee(username, employeeDTO);
+            return ResponseEntity.ok("{\"message\": \"Employee updated successfully\"}");
+        } catch (Exception e) {
+            // Trả về lỗi nếu có bất kỳ ngoại lệ nào xảy ra trong quá trình cập nhật
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error updating employee");
+        }
+    }
+
+    @DeleteMapping("/{username}")
     public ResponseEntity<?> deleteEmployee(
-            @PathVariable("id") Long employeeId
+            @PathVariable("username") String username
     ){
         try {
-            employeeService.deleteEmployee(employeeId);
-            return ResponseEntity.ok().body("Employee with ID " + employeeId + " has been deleted successfully.");
+            employeeService.deleteEmployee(username);
+            return ResponseEntity.ok().body("{\"message\": \"Employee deleted successfully\"}");
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Error deleting employee with ID " + employeeId + ": " + e.getMessage());
+            return ResponseEntity.badRequest().body("Error deleting employee with ID " + username + ": " + e.getMessage());
         }
 
     }
