@@ -73,7 +73,7 @@ public class NewsService implements INewsService {
     }
 
     // Cập nhật một bài viết tin tức
-    public News updateNews(Long id, News updatedNews) throws Exception{
+    public News updateNews(Long id, NewsDTO updatedNews) throws Exception{
         News existingNews = newsRepository.findById(id).orElse(null);
         if (existingNews != null) {
             existingNews.setTitle(updatedNews.getTitle());

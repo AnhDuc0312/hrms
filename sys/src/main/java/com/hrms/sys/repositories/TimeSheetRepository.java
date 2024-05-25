@@ -1,10 +1,13 @@
 package com.hrms.sys.repositories;
 
 import com.hrms.sys.models.TimeSheet;
+import io.lettuce.core.dynamic.annotation.Param;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 
 import java.time.LocalDate;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -32,4 +35,13 @@ public interface TimeSheetRepository extends JpaRepository<TimeSheet, Long> {
     List<TimeSheet> findByUserIdOrderByRecordDateDesc(Long userId);
 
     List<TimeSheet> findByRecordDateBetween(LocalDate startDate, LocalDate endDate);
+
+    @Query("SELECT t FROM TimeSheet t WHERE t.recordDate BETWEEN :startDate AND :endDate AND t.user.id = :userId")
+    List<TimeSheet> findByRecordDateBetweenAndUserId(
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate,
+            @Param("userId") Long userId);
+
+    @Query("SELECT COALESCE(SUM(t.workingHours), 0) FROM TimeSheet t WHERE t.recordDate BETWEEN :startDate AND :endDate")
+    Double getTotalWorkingHours(@Param("startDate") Date startDate, @Param("endDate") Date endDate);
 }

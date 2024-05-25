@@ -4,6 +4,7 @@ import com.hrms.sys.dtos.OvertimeDTO;
 import com.hrms.sys.models.Overtime;
 
 import java.util.List;
+import java.util.Map;
 
 public interface IOvertimeService {
     Overtime createOvertime(String username ,OvertimeDTO overtimeDTO ) throws Exception;
@@ -20,7 +21,9 @@ public interface IOvertimeService {
 
     Overtime updateOvertime(Long id, OvertimeDTO overtimeDTO) throws Exception;
 
-    void approveOvertime(Long id) throws Exception;
+    void approveOvertime(String username) throws Exception;
 
-    void rejectOvertime(Long id) throws Exception;
+    void rejectOvertime(String username) throws Exception;
+
+    Map<String, Long> getRemoteStatisticsForToday() throws Exception;
 }

@@ -42,6 +42,8 @@ public class Overtime extends BaseEntity {
 
     private String status;
 
+    private String type;
+
     @Column(name = "allowed_hours")
     private Float allowedHours;
 

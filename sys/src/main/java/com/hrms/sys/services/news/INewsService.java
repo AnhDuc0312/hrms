@@ -18,7 +18,7 @@ public interface INewsService {
     News createNews(NewsDTO newsDTO) throws Exception;
 
     // Cập nhật tin tức
-    News updateNews(Long id, News news) throws Exception;
+    News updateNews(Long id, NewsDTO news) throws Exception;
 
     // Xóa tin tức
     void deleteNews(Long id) throws Exception;

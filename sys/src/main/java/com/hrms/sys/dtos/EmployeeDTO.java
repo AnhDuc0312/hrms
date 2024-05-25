@@ -50,5 +50,7 @@ public class EmployeeDTO {
 
     private Float allowance;
 
+    private Float basicSalary;
+
 
 }

@@ -3,16 +3,12 @@ package com.hrms.sys.services.employee;
 import com.hrms.sys.dtos.EmployeeDTO;
 import com.hrms.sys.exceptions.InvalidDataException;
 import com.hrms.sys.models.*;
-import com.hrms.sys.repositories.EmployeeRepository;
-import com.hrms.sys.repositories.RoleRepository;
-import com.hrms.sys.repositories.UserRepository;
+import com.hrms.sys.repositories.*;
 import com.hrms.sys.responses.EmployeeResponse;
 import com.hrms.sys.services.user.UserService;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -23,8 +19,10 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -33,6 +31,9 @@ public class EmployeeService implements IEmployeeService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
+    private final BenefitRepository benefitRepository;
+    private final PayrollRepository payrollRepository;
+    private final DepartmentRepository departmentRepository;
     private final UserService userService;
     @Value("${upload.dir}")
     private String uploadDir;
@@ -40,8 +41,35 @@ public class EmployeeService implements IEmployeeService {
 
     @Override
     public Employee createEmployee(EmployeeDTO employeeDTO, MultipartFile avatar) throws Exception {
-        Benefit benefit = Benefit.builder().build();
-        Payroll payroll = Payroll.builder().build();
+        Benefit benefit = Benefit.builder()
+                .allowance(employeeDTO.getAllowance())
+                .bonus(1000000F)
+                .disabilityAllowance(0F)
+                .healthInsurance(0F)
+                .maternityInsurance(0F)
+                .socialInsurance(0F)
+                .workAccidentInsurance(0F)
+                .build();
+        Optional<Department> department = departmentRepository.findById(1L);
+        benefitRepository.save(benefit);
+        Payroll payroll = Payroll.builder()
+                .basicSalary(employeeDTO.getBasicSalary())
+                .tax(0F)
+                .basicSalaryReceived(0F)
+                .benefit(benefit.getBonus())
+                .date(LocalDateTime.now())
+                .lateDeduction(0F)
+                .overtimeSalary(0F)
+                .permittedLeave(0F)
+                .quarterlyAward(0F)
+                .salaryOvertime(0F)
+                .insurance(0F)
+                .totalHoursWorked(0F)
+                .totalSalary(0F)
+                .totalHoursOvertime(0F)
+
+                .build();
+        payrollRepository.save(payroll);
         Employee newEmployee = Employee.builder()
                 .fullName(employeeDTO.getFullName())
                 .gender(employeeDTO.getGender())
@@ -55,6 +83,10 @@ public class EmployeeService implements IEmployeeService {
                 .education(employeeDTO.getEducation())
                 .benifit(benefit)
                 .payroll(payroll)
+                .department(department.get())
+                .remainingOvertimeHours(30)
+                .remainingPaidLeaveDays(12)
+                .remainingRemoteDays(48)
                 .build();
 
         Employee savedEmployee = employeeRepository.save(newEmployee);
@@ -78,7 +110,13 @@ public class EmployeeService implements IEmployeeService {
 
         savedEmployee.setUser(user);
 
+//        payroll.setUser(user);
+//        benefit.setUser(user);
+
+
         userRepository.save(user);
+        payrollRepository.save(payroll);
+        benefitRepository.save(benefit);
         employeeRepository.save(savedEmployee);
 
 //        newEmployee.setUser(user);
@@ -104,15 +142,20 @@ public class EmployeeService implements IEmployeeService {
                 // throw new RuntimeException("Error uploading avatar");
             }
         }
+        else {
+            newEmployee.setAvatarUrl(uploadDir + "/avatar-test.jpg" );
+        }
         return null;
     }
 
     @Override
-    public Page<EmployeeResponse> getAllEmployees(PageRequest pageRequest, Long departmentId, String keyword) throws Exception{
+    public List<EmployeeResponse> getAllEmployees( String keyword) throws Exception{
         // Tạo đối tượng Pageable để phân trang và sắp xếp
-        Page<Employee> employeePage;
-        employeePage = employeeRepository.searchEmployees(departmentId,keyword,pageRequest);
-        return employeePage.map( EmployeeResponse::fromEmployee);
+        List<Employee> employeeList;
+        employeeList = employeeRepository.searchEmployees(keyword);
+        return employeeList.stream()
+                .map(EmployeeResponse::fromEmployee)
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -134,7 +177,7 @@ public class EmployeeService implements IEmployeeService {
                     employee.getUser().getUsername(),
                     employee.getUser().getDepartment() != null ? employee.getUser().getDepartment().getName() : "chưa xét",
                     employee.getBenifit() !=null ? employee.getBenifit().getAllowance() : 0 ,
-                    employee.getHourlyWage(),
+                    employee.getPayroll() != null ? employee.getPayroll().getBasicSalary() : 0,
                     0
                     );
         } else {
@@ -160,9 +203,9 @@ public class EmployeeService implements IEmployeeService {
                     employee.getPosition(),
                     employee.getEducation(),
                     employee.getUser().getUsername(),
-                    employee.getUser().getDepartment() != null ? employee.getUser().getDepartment().getName() : "chưa xét",
+                    employee.getDepartment() != null ? employee.getDepartment().getName() : "chưa xét",
                     employee.getBenifit() !=null ? employee.getBenifit().getAllowance() : 0 ,
-                    employee.getHourlyWage(),
+                    employee.getPayroll() != null ? employee.getPayroll().getBasicSalary() : 0,
                     0
             );
         } else {
@@ -186,6 +229,10 @@ public class EmployeeService implements IEmployeeService {
             }
             // Xóa nhân viên sau
             employeeRepository.delete(employee);
+            Optional<Benefit> benefit = benefitRepository.findById(employeeOptional.get().getBenifit().getId());
+            benefitRepository.delete(benefit.get());
+            Optional<Payroll> payroll =  payrollRepository.findById(employeeOptional.get().getPayroll().getId());
+            payrollRepository.delete(payroll.get());
         });
 
 

@@ -50,4 +50,7 @@ public class TimeSheetDTO {
 
     @JsonProperty("code")
     private String code;
+
+    @JsonProperty("full_name")
+    private String fullName;
 }

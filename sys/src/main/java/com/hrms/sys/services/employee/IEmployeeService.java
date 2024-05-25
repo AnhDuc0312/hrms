@@ -12,7 +12,7 @@ import java.util.List;
 public interface IEmployeeService {
     Employee createEmployee(EmployeeDTO employeeDTO, MultipartFile avatar) throws Exception;
 
-    Page<EmployeeResponse> getAllEmployees(PageRequest pageRequest, Long departmentId, String keyword) throws Exception;
+    List<EmployeeResponse> getAllEmployees( String keyword) throws Exception;
 
     EmployeeResponse getEmployeeById(Long id) throws Exception;
 

@@ -24,6 +24,9 @@ public class OvertimeDTO {
     @JsonProperty("evident")
     private String evident;
 
+    @JsonProperty("type")
+    private String type;
+
     @JsonProperty("comment")
     private String comment;
 

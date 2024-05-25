@@ -203,17 +203,25 @@ public class TimeSheetService implements ITimeSheetService{
         timeSheetDTO.setStatus(timeSheet.getStatus());
         timeSheetDTO.setTypeWork(timeSheet.getTypeWork());
         timeSheetDTO.setCode(timeSheet.getCode());
+        timeSheetDTO.setFullName(timeSheet.getUser().getFullName());
         return timeSheetDTO;
     }
-    public TotalHoursDTO getTotalHoursForLastFifteenDays(Long userId) {
-        LocalDate currentDate = LocalDate.now();
-        LocalDate fifteenDaysAgo = currentDate.minusMonths(1).withDayOfMonth(15);
+    public TotalHoursDTO getTotalHoursForLastFifteenDays(Long userId) {LocalDate currentDate = LocalDate.now();
 
-        List<TimeSheet> timeSheets = timeSheetRepository.findByRecordDateBetween(fifteenDaysAgo, currentDate);
+        // Calculate start date
+        LocalDate previousMonth = currentDate.minusMonths(1);
+        int maxDay = previousMonth.lengthOfMonth();
+        LocalDate startDate = previousMonth.withDayOfMonth(Math.min(15, maxDay));
+
+        // Calculate end date
+        LocalDate endDate = currentDate.withDayOfMonth(15);
+
+        // Lấy danh sách các bản ghi trong khoảng thời gian từ startDate đến endDate
+        List<TimeSheet> timeSheets = timeSheetRepository.findByRecordDateBetweenAndUserId(startDate, endDate , userId);
 
         float totalWorkingHours = 0;
-        float totalOvertimeHours= 0;
-        float totalLeaveHours= 0;
+        float totalOvertimeHours = 0;
+        float totalLeaveHours = 0;
 
         for (TimeSheet timeSheet : timeSheets) {
             totalWorkingHours += timeSheet.getWorkingHours();
@@ -221,6 +229,6 @@ public class TimeSheetService implements ITimeSheetService{
             totalLeaveHours += timeSheet.getLeaveHours();
         }
 
-        return new TotalHoursDTO(userId,totalWorkingHours, totalOvertimeHours, totalLeaveHours);
+        return new TotalHoursDTO(userId, totalWorkingHours, totalOvertimeHours, totalLeaveHours);
     }
 }

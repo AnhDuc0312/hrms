@@ -49,4 +49,24 @@ public class NewsController {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<News> updateNews(@PathVariable("id") Long id, @RequestBody NewsDTO newsDTO) {
+        try {
+            News updatedNews = newsService.updateNews(id, newsDTO);
+            return new ResponseEntity<>(updatedNews, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteNews(@PathVariable("id") Long id) {
+        try {
+            newsService.deleteNews(id);
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 }

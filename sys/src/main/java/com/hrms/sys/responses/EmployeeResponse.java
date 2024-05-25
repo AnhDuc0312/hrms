@@ -79,7 +79,7 @@ public class EmployeeResponse {
                 .phoneNumber(employee.getPhoneNumber())
                 .department(employee.getDepartment().getName())
                 .allowance(employee.getBenifit() !=null ? employee.getBenifit().getAllowance() : 0 )
-                .hourlyWage(employee.getHourlyWage())
+                .hourlyWage(employee.getPayroll() != null ? employee.getPayroll().getBasicSalary() : 0)
                 .build();
 
         return employeeResponse;

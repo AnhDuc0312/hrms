@@ -13,6 +13,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @AllArgsConstructor
 @RequestMapping("${api.prefix}/overtimes")
@@ -105,23 +106,34 @@ public class OvertimeController {
         }
     }
 
-    @PostMapping("/approve/{id}")
-    public ResponseEntity<?> approveOvertime(@PathVariable Long id) {
+    @PostMapping("/approve/{username}")
+    public ResponseEntity<?> approveOvertime(@PathVariable String username) {
         try {
-            overtimeService.approveOvertime(id);
+            overtimeService.approveOvertime(username);
             return ResponseEntity.ok().build();
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
         }
     }
 
-    @PostMapping("/reject/{id}")
-    public ResponseEntity<?> rejectOvertime(@PathVariable Long id) {
+    @PostMapping("/reject/{username}")
+    public ResponseEntity<?> rejectOvertime(@PathVariable String username) {
         try {
-            overtimeService.rejectOvertime(id);
+            overtimeService.rejectOvertime(username);
             return ResponseEntity.ok().build();
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+        }
+    }
+
+    @GetMapping("/statistics")
+    public ResponseEntity<Map<String, Long>> getOvertimeStatisticsForToday() {
+        try {
+            Map<String, Long> statistics = overtimeService.getRemoteStatisticsForToday();
+            return ResponseEntity.ok(statistics);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).build();
         }
     }
 }

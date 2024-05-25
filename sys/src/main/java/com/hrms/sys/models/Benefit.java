@@ -16,6 +16,10 @@ public class Benefit {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+//    @OneToOne
+//    @JoinColumn
+//    private User user;
+
     // Phụ cấp
     @Column(name = "allowance")
     private Float allowance;

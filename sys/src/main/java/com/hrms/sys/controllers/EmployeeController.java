@@ -52,41 +52,16 @@ public class EmployeeController {
     }
 
     @GetMapping("")
-    public ResponseEntity<EmployeeListResponse> getAllEmployees(@RequestParam(defaultValue = "0") int page,
-                                          @RequestParam( defaultValue = "10") int size,
-                                          @RequestParam( defaultValue = "1", name = "department_id") Long departmentId,
-                                          @RequestParam( defaultValue = "") String keyword) throws Exception {
-
-        int totalPages = 0;
-
-        PageRequest pageRequest = PageRequest.of(
-                page,size, Sort.by("id").ascending()
-        );
-        List<EmployeeResponse> employeeResponses = employeeRedisService.getAllEmployees(keyword , departmentId, pageRequest);
-
-        if (employeeResponses != null && !employeeResponses.isEmpty()) {
-            totalPages = employeeResponses.get(0).getTotalPages();
+    public ResponseEntity<?> getAllEmployees(@RequestParam(defaultValue = "") String keyword) {
+        try {
+            List<EmployeeResponse> employeeList = employeeService.getAllEmployees(keyword);
+            return ResponseEntity.ok(employeeList);
+        } catch (Exception e) {
+            // Log the exception if needed
+            e.printStackTrace();
+            // Return an appropriate error response
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred while fetching employees.");
         }
-        if (employeeResponses == null) {
-            Page<EmployeeResponse> responsePage = employeeService.getAllEmployees( pageRequest,  departmentId, keyword);
-            totalPages = responsePage.getTotalPages();
-            employeeResponses = responsePage.getContent();
-
-            for (EmployeeResponse employee : employeeResponses) {
-                employee.setTotalPages(totalPages);
-            }
-
-//            employeeRedisService.saveAllEmployees(
-//                    employeeResponses,keyword, departmentId, pageRequest
-//
-//            );
-        }
-        return ResponseEntity.ok(EmployeeListResponse
-                .builder()
-                        .employees(employeeResponses)
-                        .totalPages(totalPages)
-                .build()
-        );
     }
 
     @GetMapping("/{id}")

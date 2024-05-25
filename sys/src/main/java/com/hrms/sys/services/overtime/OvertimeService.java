@@ -14,8 +14,8 @@ import org.springframework.stereotype.Service;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
+import java.time.LocalTime;
+import java.util.*;
 
 @Service
 @AllArgsConstructor
@@ -46,15 +46,50 @@ public class OvertimeService implements IOvertimeService {
         Employee employee = employeeRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Employee not found"));
 
-        float remainingPaidRemoteDays = employee.getRemainingRemoteDays();
+        float remainingPaidOvertimeHours = employee.getRemainingOvertimeHours();
 
         //tính time nghỉ
         LocalDate overtimeStartDate = overtimeDTO.getFromDatetime().toLocalDate();
         LocalDate overtimeEndDate = overtimeDTO.getToDatetime().toLocalDate();
 
-        long remoteDays = overtimeStartDate.datesUntil(overtimeEndDate.plusDays(1)).count();
+        //Kiem tra thoi gian bat dau va ket thuc
+        LocalDateTime overtimeStartDateTime = overtimeDTO.getFromDatetime();
+        LocalDateTime overtimeEndDateTime = overtimeDTO.getToDatetime();
 
-        if (remainingPaidRemoteDays >= remoteDays) {
+        //Chuyen doi sang LocalTime
+        LocalTime overtimeStartTime = overtimeStartDateTime.toLocalTime();
+        LocalTime overtimeEndTime = overtimeEndDateTime.toLocalTime();
+
+        if (overtimeStartTime.getHour()<8 || overtimeEndTime.getHour() >= 18) {
+            throw new RuntimeException("Leave work must start after 8 AM and end before 6 PM");
+        }
+
+        if (overtimeStartDateTime.equals(overtimeEndDateTime)){
+            throw new RuntimeException("Remote start and end date cannot be the same.");
+        }
+
+        // Kiểm tra xem thời gian bắt đầu và kết thúc có trùng với bất kỳ yêu cầu nghỉ phép nào khác không
+        List<Overtime> overlappingOvertimes = overtimeRepository.findOverlappingOvertimes(user, overtimeDTO.getFromDatetime(), overtimeDTO.getToDatetime());
+        if (!overlappingOvertimes.isEmpty()) {
+            throw new RuntimeException("The remote request overlaps with existing remote requests.");
+        }
+
+        // Tính thời điểm trong tuần tới
+        LocalDateTime nextWeek = currentDate.plusDays(7);
+//        LocalDateTime nextWeek = currentDate.toLocalDate().with(TemporalAdjusters.next(DayOfWeek.MONDAY)).atStartOfDay();
+
+        // Kiểm tra xem người dùng đã đăng ký remote gần đây nhất cách đây 1 tuần hay không
+        List<Overtime> recentOvertimes = overtimeRepository.findRecentOvertimes(user, currentDate, nextWeek);
+        boolean hasRecentRemote = !recentOvertimes.isEmpty();
+
+        Duration duration = Duration.between(overtimeStartDateTime, overtimeEndDateTime);
+        float workedHours = (float) duration.toMinutes() / 60;
+
+//        long overtimeDays = overtimeStartDate.datesUntil(overtimeEndDate.plusDays(1)).count();
+
+//        float workedHours = Duration.between(overtimeStartDate, overtimeEndDate).toHours();
+
+        if (remainingPaidOvertimeHours >= workedHours && !hasRecentRemote && overtimeDTO.getType().equals("1")) {
             Overtime overtime = Overtime.builder()
                     .fromDatetime(overtimeDTO.getFromDatetime())
                     .toDatetime((overtimeDTO.getToDatetime()))
@@ -62,15 +97,15 @@ public class OvertimeService implements IOvertimeService {
                     .comment(overtimeDTO.getComment())
                     .evident(overtimeDTO.getEvident())
                     .user(user)
-//                    .type(remoteDTO.getType())
+                    .type(overtimeDTO.getType())
                     .approver(null)
-                    .workedHours(null)
+                    .workedHours(workedHours)
                     .status("Approved")
                     .build();
             overtimeRepository.save(overtime);
 
-            float updatedRemainingPaidRemoteDays = remainingPaidRemoteDays - remoteDays;
-            employee.setRemainingRemoteDays(updatedRemainingPaidRemoteDays);
+            float updatedRemainingPaidOvertimeHours = remainingPaidOvertimeHours - workedHours;
+            employee.setRemainingRemoteDays(updatedRemainingPaidOvertimeHours);
             employeeRepository.save(employee);
 
             return overtime;
@@ -82,9 +117,9 @@ public class OvertimeService implements IOvertimeService {
                     .comment(overtimeDTO.getComment())
                     .evident(overtimeDTO.getEvident())
                     .user(user)
-//                    .type(remoteDTO.getType())
+                    .type(overtimeDTO.getType())
                     .approver(null)
-                    .workedHours(null)
+                    .workedHours(workedHours)
                     .status("Pending")
                     .build();
             overtimeRepository.save(overtime);
@@ -107,7 +142,9 @@ public class OvertimeService implements IOvertimeService {
 
     @Override
     public List<Overtime> getAllOvertimes() throws Exception {
-        return null;
+        List<Overtime> overtimes = overtimeRepository.findAll();
+        Collections.reverse(overtimes);
+        return overtimes;
     }
 
     @Override
@@ -130,18 +167,36 @@ public class OvertimeService implements IOvertimeService {
     }
 
     @Override
-    public void approveOvertime(Long id) throws Exception {
-        Overtime overtime = overtimeRepository.findById(id)
-                .orElseThrow(() -> new Exception("Overtime not found"));
+    public void approveOvertime(String username) throws Exception {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        Overtime overtime = (Overtime) overtimeRepository.findByUser(user);
+
+
+        Employee employee = employeeRepository.findByUser(user)
+                .orElseThrow(() -> new RuntimeException("Employee not found"));
+
+        // Lấy số giờ làm thêm giờ của đơn overtime
+        float workedHours = overtime.getWorkedHours();
+
+        // Cập nhật lại số giờ còn lại cho nhân viên
+        float updatedRemainingPaidOvertimeHours = employee.getRemainingOvertimeHours() - workedHours;
+        employee.setRemainingOvertimeHours(updatedRemainingPaidOvertimeHours);
+        employeeRepository.save(employee);
+
+        // Đặt trạng thái của đơn làm thêm giờ là "Rejected"
         overtime.setStatus("Approved");
         overtimeRepository.save(overtime);
-
     }
 
     @Override
-    public void rejectOvertime(Long id) throws Exception {
-        Overtime overtime = overtimeRepository.findById(id)
-                .orElseThrow(() -> new Exception("Overtime not found"));
+    public void rejectOvertime(String username) throws Exception {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        Overtime overtime = (Overtime) overtimeRepository.findByUser(user);
+
         overtime.setStatus("Rejected");
         overtimeRepository.save(overtime);
 
@@ -160,5 +215,21 @@ public class OvertimeService implements IOvertimeService {
     // Lấy tổng số giờ OT trong tháng của user
     private Float getTotalOvertimeHoursThisMonth(String username) {
         return null;
+    }
+
+    @Override
+    public Map<String, Long> getRemoteStatisticsForToday() throws Exception {
+        LocalDate today = LocalDate.now();
+        LocalDateTime startOfDay = today.atStartOfDay();
+        LocalDateTime endOfDay = today.atTime(23, 59, 59);
+
+        long totalCount = overtimeRepository.countAllByCreatedAtBetween(startOfDay, endOfDay);
+        long pendingCount = overtimeRepository.countAllByStatusAndCreateAtBetween("Pending", startOfDay, endOfDay);
+
+        Map<String, Long> statistics = new HashMap<>();
+        statistics.put("total", totalCount);
+        statistics.put("pending", pendingCount);
+
+        return statistics;
     }
 }

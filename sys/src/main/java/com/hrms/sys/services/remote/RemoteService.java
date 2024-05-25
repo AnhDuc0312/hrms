@@ -169,6 +169,22 @@ public class RemoteService implements IRemoteService {
     @Override
     public void approveRemote(long id) throws Exception {
         Remote remote = remoteRepository.findById(id).orElse(null);
+        remote.setStatus("Approved");
+        remote.setWorkedHours(8F);
+
+        Employee employee = employeeRepository.findById(remote.getUser().getId())
+                .orElseThrow(() -> new RuntimeException("Employee not found"));
+
+
+        //tính time nghỉ
+        LocalDate remoteStartDate = remote.getFromDatetime().toLocalDate();
+        LocalDate remoteEndDate = remote.getToDatetime().toLocalDate();
+        float remainingPaidRemoteDays = employee.getRemainingRemoteDays();
+        long remoteDays = remoteStartDate.datesUntil(remoteEndDate.plusDays(1)).count();
+        float updatedRemainingPaidRemoteDays = remainingPaidRemoteDays - remoteDays;
+        employee.setRemainingRemoteDays(updatedRemainingPaidRemoteDays);
+        remoteRepository.save(remote);
+        employeeRepository.save(employee);
 
     }
 

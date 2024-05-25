@@ -126,6 +126,22 @@ public class LeaveService implements ILeaveService {
         return leaves;
     }
 
+    public long countApprovedLeavesFromPrevious15thToCurrent15th(Long userId) throws Exception {
+
+        LocalDate currentDate = LocalDate.now();
+
+        // Calculate start date
+        LocalDate previousMonth = currentDate.minusMonths(1);
+        int maxDay = previousMonth.lengthOfMonth();
+        LocalDateTime startDate = previousMonth.withDayOfMonth(Math.min(15, maxDay)).atStartOfDay();
+
+        // Calculate end date
+        LocalDateTime endDate = currentDate.withDayOfMonth(15).atStartOfDay();
+
+        List<Leave> approvedLeaves = leaveRepository.findApprovedLeavesByUserIdAndDateRange(userId, startDate, endDate);
+        return approvedLeaves.size();
+    }
+
 
 
 }
