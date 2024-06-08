@@ -45,7 +45,7 @@ public class EmployeeController {
                 return ResponseEntity.badRequest().body(errorMessages);
             }
             Employee newEmployee = employeeService.createEmployee(employeeDTO,avatar);
-            return ResponseEntity.ok("CREATE EMPLOYEE SUCCESSFULLY");
+            return ResponseEntity.ok("{\"message\": \"Create employee successfully\"}");
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }

@@ -1,5 +1,6 @@
 package com.hrms.sys.services.timesheet;
 
+import com.hrms.sys.dtos.MonthSummaryDTO;
 import com.hrms.sys.dtos.TimeSheetDTO;
 import com.hrms.sys.dtos.TotalHoursDTO;
 import com.hrms.sys.exceptions.NotFoundException;
@@ -14,9 +15,9 @@ import org.springframework.stereotype.Service;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.Month;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -199,7 +200,7 @@ public class TimeSheetService implements ITimeSheetService{
         timeSheetDTO.setUserId(timeSheet.getUser().getId());
         timeSheetDTO.setLeaveHours(timeSheet.getLeaveHours());
         timeSheetDTO.setWorkingHours(timeSheet.getWorkingHours());
-        timeSheetDTO.setOvertimeHours(timeSheetDTO.getOvertimeHours());
+        timeSheetDTO.setOvertimeHours(timeSheet.getOvertimeHours());
         timeSheetDTO.setStatus(timeSheet.getStatus());
         timeSheetDTO.setTypeWork(timeSheet.getTypeWork());
         timeSheetDTO.setCode(timeSheet.getCode());
@@ -230,5 +231,55 @@ public class TimeSheetService implements ITimeSheetService{
         }
 
         return new TotalHoursDTO(userId, totalWorkingHours, totalOvertimeHours, totalLeaveHours);
+    }
+
+
+    // Phương thức để lấy số lượng nhân viên đã check-in trong một ngày cụ thể
+    public long getCheckedInCountByDate(LocalDate date) {
+        return timeSheetRepository.countByRecordDate(date);
+    }
+
+    // Phương thức để lấy số ngày làm việc của mỗi nhân viên trong một khoảng thời gian
+    public Map<Long, Long> getWorkDaysForEachEmployee(LocalDate startDate, LocalDate endDate) {
+        List<TimeSheet> timeSheets = timeSheetRepository.findByRecordDateBetween(startDate, endDate);
+        return timeSheets.stream()
+                .filter(ts -> ts.getInTime() != null && ts.getOutTime() != null)
+                .collect(Collectors.groupingBy(ts -> ts.getUser().getId(), Collectors.counting()));
+    }
+
+    // Phương thức để lấy số ngày nghỉ của mỗi nhân viên trong một khoảng thời gian
+    public Map<Long, Long> getLeaveDaysForEachEmployee(LocalDate startDate, LocalDate endDate) {
+        List<TimeSheet> timeSheets = timeSheetRepository.findByRecordDateBetween(startDate, endDate);
+        return timeSheets.stream()
+                .filter(ts -> ts.getLeaveHours() > 0)
+                .collect(Collectors.groupingBy(ts -> ts.getUser().getId(), Collectors.counting()));
+    }
+
+    public List<MonthSummaryDTO> getMonthlyWorkSummaryByUserIdAndYear(Long userId, int year) throws NotFoundException {
+        User user = userService.getUserById(userId);
+        List<TimeSheet> timeSheets = timeSheetRepository.findByUserId(userId);
+
+        Map<Month, MonthSummaryDTO> monthSummaryMap = new HashMap<>();
+
+        // Initialize month summaries
+        for (Month month : Month.values()) {
+            monthSummaryMap.put(month, new MonthSummaryDTO(month.toString(), 0, 0));
+        }
+
+        // Calculate working days and off days for each month in the specified year
+        for (TimeSheet timeSheet : timeSheets) {
+            LocalDate recordDate = timeSheet.getRecordDate();
+            if (recordDate.getYear() == year) {
+                Month month = recordDate.getMonth();
+                MonthSummaryDTO summary = monthSummaryMap.get(month);
+                if (timeSheet.getLeaveHours() > 0) {
+                    summary.setOff(summary.getOff() + 1);
+                } else {
+                    summary.setWorking(summary.getWorking() + 1);
+                }
+            }
+        }
+
+        return new ArrayList<>(monthSummaryMap.values());
     }
 }

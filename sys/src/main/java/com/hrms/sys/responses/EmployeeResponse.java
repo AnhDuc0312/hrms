@@ -1,8 +1,14 @@
 package com.hrms.sys.responses;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.hrms.sys.models.Benefit;
 import com.hrms.sys.models.Employee;
+import com.hrms.sys.models.Payroll;
 import com.hrms.sys.models.User;
+import jakarta.persistence.Column;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToOne;
 import lombok.*;
 
 import java.time.LocalDate;
@@ -58,6 +64,17 @@ public class EmployeeResponse {
     @JsonProperty("hourly_wage")
     private Float hourlyWage;
 
+    @JsonProperty("remaining_paid_leave_days")
+    private float remainingPaidLeaveDays;
+
+    @JsonProperty("remaining_remote_days")
+    private float remainingRemoteDays;
+
+    @JsonProperty("remaining_overtime_hours")
+    private float remainingOvertimeHours;
+
+
+
     private int totalPages;
 
     public EmployeeResponse(String fullName, String gender, LocalDate dateOfBirth, String email, String phoneNumber, String address, LocalDate contactStartDate, LocalDate contactEndDate, String position, String education, String username) {
@@ -80,6 +97,9 @@ public class EmployeeResponse {
                 .department(employee.getDepartment().getName())
                 .allowance(employee.getBenifit() !=null ? employee.getBenifit().getAllowance() : 0 )
                 .hourlyWage(employee.getPayroll() != null ? employee.getPayroll().getBasicSalary() : 0)
+                .remainingPaidLeaveDays(employee.getRemainingPaidLeaveDays())
+                .remainingRemoteDays(employee.getRemainingRemoteDays())
+                .remainingOvertimeHours(employee.getRemainingOvertimeHours())
                 .build();
 
         return employeeResponse;

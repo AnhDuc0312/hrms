@@ -50,7 +50,7 @@ public class EmployeeService implements IEmployeeService {
                 .socialInsurance(0F)
                 .workAccidentInsurance(0F)
                 .build();
-        Optional<Department> department = departmentRepository.findById(1L);
+        Optional<Department> department = departmentRepository.findById((long) Float.parseFloat(employeeDTO.getDepartment()));
         benefitRepository.save(benefit);
         Payroll payroll = Payroll.builder()
                 .basicSalary(employeeDTO.getBasicSalary())
@@ -111,7 +111,11 @@ public class EmployeeService implements IEmployeeService {
         savedEmployee.setUser(user);
 
 //        payroll.setUser(user);
+        payroll.setUsername(user.getUsername());
+        payroll.setFullName(employeeDTO.getFullName());
 //        benefit.setUser(user);
+        benefit.setUsername(user.getUsername());
+        benefit.setFullName(employeeDTO.getFullName());
 
 
         userRepository.save(user);
@@ -178,6 +182,9 @@ public class EmployeeService implements IEmployeeService {
                     employee.getUser().getDepartment() != null ? employee.getUser().getDepartment().getName() : "chưa xét",
                     employee.getBenifit() !=null ? employee.getBenifit().getAllowance() : 0 ,
                     employee.getPayroll() != null ? employee.getPayroll().getBasicSalary() : 0,
+                    employee.getRemainingPaidLeaveDays(),
+                    employee.getRemainingRemoteDays(),
+                    employee.getRemainingRemoteDays(),
                     0
                     );
         } else {
@@ -206,6 +213,9 @@ public class EmployeeService implements IEmployeeService {
                     employee.getDepartment() != null ? employee.getDepartment().getName() : "chưa xét",
                     employee.getBenifit() !=null ? employee.getBenifit().getAllowance() : 0 ,
                     employee.getPayroll() != null ? employee.getPayroll().getBasicSalary() : 0,
+                    employee.getRemainingPaidLeaveDays(),
+                    employee.getRemainingRemoteDays(),
+                    employee.getRemainingRemoteDays(),
                     0
             );
         } else {

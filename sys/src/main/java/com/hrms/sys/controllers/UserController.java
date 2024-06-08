@@ -3,12 +3,10 @@ package com.hrms.sys.controllers;
 import com.hrms.sys.dtos.*;
 import com.hrms.sys.exceptions.InvalidDataException;
 import com.hrms.sys.exceptions.NotFoundException;
+import com.hrms.sys.exceptions.UserNotFoundException;
 import com.hrms.sys.models.Token;
 import com.hrms.sys.models.User;
-import com.hrms.sys.responses.LoginResponse;
-import com.hrms.sys.responses.RegisterResponse;
-import com.hrms.sys.responses.ResponseObject;
-import com.hrms.sys.responses.UserResponse;
+import com.hrms.sys.responses.*;
 import com.hrms.sys.services.token.TokenService;
 import com.hrms.sys.services.user.UserService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -22,6 +20,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
 
@@ -260,5 +259,14 @@ public class UserController {
                 .status(HttpStatus.OK)
                 .data(null)
                 .build());
+    }
+
+    @GetMapping("/getall")
+    public ResponseEntity<List<UserChatResponse>> getall() throws IOException {
+        try{
+            return new ResponseEntity<List<UserChatResponse>>(userService.getAllUser(), HttpStatus.OK);
+        }catch (Exception e){
+            return new ResponseEntity("User not Found", HttpStatus.NOT_FOUND);
+        }
     }
 }

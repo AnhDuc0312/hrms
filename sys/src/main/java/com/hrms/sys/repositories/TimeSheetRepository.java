@@ -14,6 +14,7 @@ import java.util.Optional;
 public interface TimeSheetRepository extends JpaRepository<TimeSheet, Long> {
 
 
+    int countByRecordDate(LocalDate date);
     // Tìm bảng chấm công theo id của người dùng và ngày ghi
     Optional<TimeSheet> findByUserIdAndRecordDate(Long userId, LocalDate recordDate);
 

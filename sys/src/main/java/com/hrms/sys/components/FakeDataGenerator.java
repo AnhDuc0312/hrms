@@ -9,10 +9,7 @@
 //import org.springframework.beans.factory.annotation.Autowired;
 //import org.springframework.stereotype.Component;
 //
-//import java.time.Duration;
-//import java.time.LocalDate;
-//import java.time.LocalDateTime;
-//import java.time.LocalTime;
+//import java.time.*;
 //import java.util.ArrayList;
 //import java.util.List;
 //import java.util.concurrent.ThreadLocalRandom;
@@ -26,7 +23,7 @@
 //
 //    @PostConstruct
 //    public void generateFakeData() {
-//        User user = userRepository.findById(4);
+//        User user = userRepository.findById(11);
 //        Faker faker = new Faker();
 //        List<TimeSheet> timeSheets = new ArrayList<>();
 //
@@ -34,10 +31,15 @@
 //        LocalDate endDate = LocalDate.now().getDayOfMonth() < 15 ? LocalDate.now() : LocalDate.now().withDayOfMonth(15);
 //
 //        for (LocalDate date = startDate; !date.isAfter(endDate); date = date.plusDays(1)) {
+//            // Skip Saturdays and Sundays
+//            if (date.getDayOfWeek() == DayOfWeek.SATURDAY || date.getDayOfWeek() == DayOfWeek.SUNDAY) {
+//                continue;
+//            }
+//
 //            // Random check-in between 07:50 and 08:30
-//            LocalDateTime checkIn = date.atTime(randomTimeBetween(7, 50, 8, 30));
+//            LocalDateTime checkIn = date.atTime(randomTimeBetween(7, 30, 8, 30));
 //            // Random check-out between 17:30 and 18:00
-//            LocalDateTime checkOut = date.atTime(randomTimeBetween(17, 30, 18, 0));
+//            LocalDateTime checkOut = date.atTime(randomTimeBetween(17, 0, 18, 0));
 //
 //            TimeSheet timeSheet = TimeSheet.builder()
 //                    .inTime(checkIn)
@@ -46,12 +48,12 @@
 //                    .workingHours(0) // This will be updated later
 //                    .overtimeHours(0) // This will be updated later
 //                    .leaveHours(0)
-//                    .user(user)  // Assuming you have a User entity with ID 19
+//                    .user(user)  // Assuming you have a User entity with ID
 //                    .recordDate(date)
 //                    .checkIn(checkIn)
 //                    .checkOut(checkOut)
 //                    .typeWork(faker.options().option("Remote", "Onsite", "Overtime"))
-//                    .code(faker.code().isbn10())
+//                    .code(date.toString() + user.getUsername())
 //                    .build();
 //
 //            // Calculate working hours based on the type of work
@@ -77,7 +79,7 @@
 //
 //        float totalHours = hours + minutes / 60.0f;
 //
-//        if (totalHours > 9) {
+//        if (totalHours >= 8) {
 //            totalHours = 8;
 //        }
 //

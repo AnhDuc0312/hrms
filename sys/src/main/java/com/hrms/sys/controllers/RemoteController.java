@@ -99,7 +99,7 @@ public class RemoteController {
         }
     }
 
-    @PostMapping("/{id}/approve")
+    @PutMapping("/{id}/approve")
     public ResponseEntity<Void> approveRemote(@PathVariable("id") long id) {
         try {
             remoteService.approveRemote(id);
@@ -109,7 +109,7 @@ public class RemoteController {
         }
     }
 
-    @PostMapping("/{id}/reject")
+    @PutMapping("/{id}/reject")
     public ResponseEntity<Void> rejectRemote(@PathVariable("id") long id) {
         try {
             remoteService.rejectRemote(id);

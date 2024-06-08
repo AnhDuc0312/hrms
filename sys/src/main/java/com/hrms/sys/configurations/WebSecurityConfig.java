@@ -109,6 +109,22 @@ public class WebSecurityConfig {
                                     String.format("%s/payroll**",apiPrefix)).hasRole(Role.ADMIN)
                             .requestMatchers(DELETE,
                                     String.format("%s/payroll**",apiPrefix)).hasRole(Role.ADMIN)
+                            .requestMatchers(POST,
+                                    String.format("%s/courses**", apiPrefix)).permitAll()
+                            .requestMatchers(GET,
+                                    String.format("%s/courses**", apiPrefix)).permitAll()
+                            .requestMatchers(DELETE,
+                                    String.format("%s/courses**", apiPrefix)).permitAll()
+                            .requestMatchers(PUT,
+                                    String.format("%s/courses**", apiPrefix)).permitAll()
+                            .requestMatchers(POST,
+                                    String.format("%s/videos**", apiPrefix)).permitAll()
+                            .requestMatchers(GET,
+                                    String.format("%s/videos**", apiPrefix)).permitAll()
+                            .requestMatchers(DELETE,
+                                    String.format("%s/videos**", apiPrefix)).permitAll()
+                            .requestMatchers(PUT,
+                                    String.format("%s/videos**", apiPrefix)).permitAll()
 
 
 

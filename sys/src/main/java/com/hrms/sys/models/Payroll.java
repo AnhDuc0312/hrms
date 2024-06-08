@@ -68,6 +68,11 @@ public class Payroll extends BaseEntity {
     @Column(name = "permitted_leave")
     private Float permittedLeave;
 
+    private String username;
+
+    @Column(name = "full_name")
+    private String fullName;
+
 
 
 

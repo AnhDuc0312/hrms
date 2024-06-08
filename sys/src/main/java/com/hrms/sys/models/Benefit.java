@@ -47,4 +47,9 @@ public class Benefit {
     // Phụ cấp khuyết tật
     @Column(name = "disability_allowance")
     private Float disabilityAllowance;
+
+    private String username;
+
+    @Column(name = "full_name")
+    private String fullName;
 }

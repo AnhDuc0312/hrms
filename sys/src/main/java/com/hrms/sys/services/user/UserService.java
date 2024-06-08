@@ -12,6 +12,7 @@ import com.hrms.sys.repositories.EmployeeRepository;
 import com.hrms.sys.repositories.RoleRepository;
 import com.hrms.sys.repositories.TokenRepository;
 import com.hrms.sys.repositories.UserRepository;
+import com.hrms.sys.responses.UserChatResponse;
 import com.hrms.sys.services.user.IUserService;
 import com.hrms.sys.utils.JwtTokenUtil;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -210,4 +212,18 @@ public class UserService implements IUserService {
         return userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User not found with id: " + userId));
     }
+
+    public List<UserChatResponse> getAllUser() throws Exception {
+        List<UserChatResponse> userChatResponses = new ArrayList<>();
+        List<User> users = userRepository.findAll();
+        for (User user : users) {
+            UserChatResponse userChatResponse = new UserChatResponse();
+            userChatResponse.setUsername(user.getUsername());
+            userChatResponse.setFullname(user.getFullName());
+            userChatResponses.add(userChatResponse);
+        }
+        return userChatResponses;
+    }
+
+
 }

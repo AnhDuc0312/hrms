@@ -1,6 +1,8 @@
 package com.hrms.sys.controllers;
 
+import com.hrms.sys.dtos.MonthSummaryDTO;
 import com.hrms.sys.dtos.TimeSheetDTO;
+import com.hrms.sys.exceptions.NotFoundException;
 import com.hrms.sys.services.timesheet.TimeSheetService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -10,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("${api.prefix}/timesheets")
@@ -111,6 +114,26 @@ public class TimeSheetController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
+    }
+
+    @GetMapping("/checked-in-count")
+    public long getCheckedInCount(@RequestParam LocalDate date) {
+        return timeSheetService.getCheckedInCountByDate(date);
+    }
+
+    @GetMapping("/workdays")
+    public Map<Long, Long> getWorkDays(@RequestParam LocalDate startDate, @RequestParam LocalDate endDate) {
+        return timeSheetService.getWorkDaysForEachEmployee(startDate, endDate);
+    }
+
+    @GetMapping("/leave-days")
+    public Map<Long, Long> getLeaveDays(@RequestParam LocalDate startDate, @RequestParam LocalDate endDate) {
+        return timeSheetService.getLeaveDaysForEachEmployee(startDate, endDate);
+    }
+
+    @GetMapping("/user/{userId}/monthly-summary")
+    public List<MonthSummaryDTO> getMonthlyWorkSummaryByUserId(@PathVariable Long userId) throws NotFoundException {
+        return timeSheetService.getMonthlyWorkSummaryByUserIdAndYear(userId, 2024);
     }
 
 

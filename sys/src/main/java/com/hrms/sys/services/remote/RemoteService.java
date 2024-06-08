@@ -191,7 +191,12 @@ public class RemoteService implements IRemoteService {
     @Override
     public void rejectRemote(long id) throws Exception{
         Remote remote = remoteRepository.findById(id).orElse(null);
-
+        assert remote != null;
+        if (remote.getStatus().equals("Pending")){
+            remote.setStatus("Reject");
+            remote.setWorkedHours(0F);
+            remoteRepository.save(remote);
+        }
     }
 
     @Override
