@@ -21,4 +21,8 @@ public interface ILeaveService {
     List<Leave> getLeaveByUserId(Long id) throws Exception;
 
     public List<Leave> getLeavesByDate() throws Exception;
+
+    void approveRemote(long id) throws Exception;
+
+    void rejectRemote(long id) throws Exception;
 }

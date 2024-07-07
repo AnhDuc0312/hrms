@@ -125,6 +125,10 @@ public class WebSecurityConfig {
                                     String.format("%s/videos**", apiPrefix)).permitAll()
                             .requestMatchers(PUT,
                                     String.format("%s/videos**", apiPrefix)).permitAll()
+                            .requestMatchers(POST,
+                                    String.format("%s/fake**", apiPrefix)).permitAll()
+                            .requestMatchers(GET,
+                                    String.format("%s/mails**", apiPrefix)).permitAll()
 
 
 
@@ -134,6 +138,7 @@ public class WebSecurityConfig {
 
                 })
                 .csrf(AbstractHttpConfigurer::disable);
+
         http.cors(new Customizer<CorsConfigurer<HttpSecurity>>() {
             @Override
             public void customize(CorsConfigurer<HttpSecurity> httpSecurityCorsConfigurer) {

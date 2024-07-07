@@ -25,6 +25,8 @@ public class Video extends BaseEntity{
 
     private String title;
     private String url;
+    private String imgUrl;
+
 
     @ManyToOne
     @JoinColumn(name = "course_id")

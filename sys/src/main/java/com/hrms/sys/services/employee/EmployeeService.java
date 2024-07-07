@@ -5,6 +5,7 @@ import com.hrms.sys.exceptions.InvalidDataException;
 import com.hrms.sys.models.*;
 import com.hrms.sys.repositories.*;
 import com.hrms.sys.responses.EmployeeResponse;
+import com.hrms.sys.services.mail.MailService;
 import com.hrms.sys.services.user.UserService;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -37,6 +38,7 @@ public class EmployeeService implements IEmployeeService {
     private final UserService userService;
     @Value("${upload.dir}")
     private String uploadDir;
+    private final MailService mailService;
 
 
     @Override
@@ -149,6 +151,18 @@ public class EmployeeService implements IEmployeeService {
         else {
             newEmployee.setAvatarUrl(uploadDir + "/avatar-test.jpg" );
         }
+
+        // Gửi email sau khi tạo Employee
+        Map<String, Object> templateModel = new HashMap<>();
+        templateModel.put("full_name", newEmployee.getFullName());
+        templateModel.put("start_date", newEmployee.getContactStartDate());
+        templateModel.put("end_date", newEmployee.getContactEndDate());
+        templateModel.put("position", newEmployee.getPosition());
+        templateModel.put("department", newEmployee.getDepartment().getName());
+        templateModel.put("username", user.getUsername());
+        templateModel.put("password", password); // Lưu ý: đây là mật khẩu gốc, không mã hóa
+
+        mailService.sendHtmlMessage(new String[]{newEmployee.getEmail()}, "Welcome to Staff Zen", templateModel);
         return null;
     }
 
@@ -260,7 +274,16 @@ public class EmployeeService implements IEmployeeService {
             employee.setEmail(employeeDTO.getEmail());
             employee.setAddress(employeeDTO.getAddress());
             employee.setPhoneNumber(employeeDTO.getPhoneNumber());
-
+            if (employeeDTO.getRemainingOvertimeHours() != 0) {
+                employee.setRemainingRemoteDays(employeeDTO.getRemainingRemoteDays());
+                employee.setRemainingOvertimeHours(employeeDTO.getRemainingOvertimeHours());
+                employee.setRemainingPaidLeaveDays(employeeDTO.getRemainingPaidLeaveDays());
+                employee.setContactEndDate(employeeDTO.getContactEndDate());
+                employee.setContactStartDate(employeeDTO.getContactStartDate());
+                employee.setEducation(employeeDTO.getEducation());
+                employee.setPosition(employeeDTO.getPosition());
+                employee.setHourlyWage(employeeDTO.getAllowance());
+            }
             // Lưu và trả về nhân viên đã được cập nhật
             return employeeRepository.save(employee);
         } else {

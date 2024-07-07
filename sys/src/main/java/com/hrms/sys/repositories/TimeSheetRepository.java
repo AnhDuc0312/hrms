@@ -29,8 +29,11 @@ public interface TimeSheetRepository extends JpaRepository<TimeSheet, Long> {
     // Lấy danh sách time sheet và sắp xếp theo ngày và thời gian
     List<TimeSheet> findAll(Sort sort);
 
+    List<TimeSheet> findByUserIdAndRecordDateBetween(Long userId, LocalDate startDate, LocalDate endDate);
+
     // Lấy danh sách time sheet theo ngày và sắp xếp theo thời gian check-in
     List<TimeSheet> findByRecordDateOrderByCheckInAsc(LocalDate date);
+
 
     // Lấy danh sách time sheet theo userId và sắp xếp theo ngày
     List<TimeSheet> findByUserIdOrderByRecordDateDesc(Long userId);

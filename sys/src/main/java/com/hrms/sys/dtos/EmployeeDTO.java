@@ -50,7 +50,17 @@ public class EmployeeDTO {
 
     private Float allowance;
 
+    @JsonProperty("hourly_wage")
     private Float basicSalary;
+
+    @JsonProperty("remaining_paid_leave_days")
+    private float remainingPaidLeaveDays;
+
+    @JsonProperty("remaining_remote_days")
+    private float remainingRemoteDays;
+
+    @JsonProperty("remaining_overtime_hours")
+    private float remainingOvertimeHours;
 
 
 }

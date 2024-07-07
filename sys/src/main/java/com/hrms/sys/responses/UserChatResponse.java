@@ -8,6 +8,9 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UserChatResponse {
+    private Long id;
     private String username;
     private String fullname;
+    private String role;
+    private String email;
 }

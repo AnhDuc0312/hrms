@@ -26,4 +26,7 @@ public interface IOvertimeService {
     void rejectOvertime(String username) throws Exception;
 
     Map<String, Long> getRemoteStatisticsForToday() throws Exception;
+    void rejectRemote(long id) throws Exception;
+
+    void approveRemote(long id) throws Exception;
 }

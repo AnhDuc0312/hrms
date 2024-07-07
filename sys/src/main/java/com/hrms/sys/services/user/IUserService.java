@@ -23,7 +23,7 @@ public interface IUserService {
 
     User resetUser(String username) throws Exception;
 
-    String login(String username , String password , Long roleID) throws Exception;
+    String login(String username , String password ) throws Exception;
 
     User getUserDetailsFromToken(String token) throws Exception;
 

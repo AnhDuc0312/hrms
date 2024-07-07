@@ -1,5 +1,7 @@
 package com.hrms.sys.services.timesheet;
 
+import com.hrms.sys.dtos.DailyWorkDetailDTO;
+import com.hrms.sys.dtos.MonthlyWorkSummaryDTO;
 import com.hrms.sys.dtos.TimeSheetDTO;
 import com.hrms.sys.exceptions.NotFoundException;
 import com.hrms.sys.models.TimeSheet;
@@ -24,4 +26,5 @@ public interface ITimeSheetService {
     List<TimeSheetDTO> getTimeSheetsByUserIdAndSortByDate(Long userId);
 
 
+    List<DailyWorkDetailDTO> getMonthlyWorkSummaryByYear(int year, String username);
 }

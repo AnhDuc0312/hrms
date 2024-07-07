@@ -15,6 +15,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@ToString(exclude = {"employees", "tasks"})
 public class Department extends BaseEntity{
 
     @Id
@@ -25,6 +26,16 @@ public class Department extends BaseEntity{
 
     @Column (name = "manager_id")
     private String managerId;
+//
+//    @ManyToOne
+//    @JoinColumn(name = "employee_id")
+//    private Employee employee;
+
+    @OneToMany(mappedBy = "department", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Employee> employees;
+
+    @OneToMany(mappedBy = "department", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Task> tasks;
 
 
 

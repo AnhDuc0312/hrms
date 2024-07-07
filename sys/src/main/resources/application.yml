@@ -1,6 +1,13 @@
 
 server:
   port: 8070
+#  ssl:
+#    key-store: classpath:mydomain_com.p12
+#    src/main/resources/mydomain_com.p12
+#    key-store-password: 1203
+#    key-store-type: PKCS12
+#    key-alias: mydomain
+#    key-password: 1203
 
 spring:
   datasource:
@@ -11,6 +18,13 @@ spring:
     username: root
     password: A@12032001
 #    ${MYSQL_ROOT_PASSWORD:A@12032001}
+#    hikari:
+#      minimum-idle: 5
+#      maximum-pool-size: 20
+#      idle-timeout: 30000
+#      max-lifetime: 1800000
+#      connection-timeout: 20000
+#      pool-name: HikariCP
   jpa:
     show-sql: true
     hibernate:
@@ -35,6 +49,19 @@ spring:
       host: ${REDIS_HOST:localhost} # Default to 'localhost' if not provided
       #host: ${REDIS_HOST:ubuntu-server-01.local} # Default to 'localhost' if not provided
       port: ${REDIS_PORT:6379}      # Default to 6379 if not provided
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: staff.zen03@gmail.com
+    password: lmqe qsfl vhkd ifoj
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+    default-encoding: UTF-8
+
 
 api:
   prefix: api/v1
@@ -47,3 +74,8 @@ jwt:
 # Đường dẫn đến thư mục lưu trữ hình ảnh
 upload:
   dir: E:\Git\Github\hrms\sys\upload
+
+logging:
+  level:
+    org.springframework: INFO
+#    com.zaxxer.hikari: DEBUG

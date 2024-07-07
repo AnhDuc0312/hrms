@@ -18,6 +18,8 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
 
     Employee findByPayroll(Payroll payroll);
 
+    List<Employee> findByDepartmentId(Long departmentId);
+
     Page<Employee> findByDepartmentIdAndFullNameContainingIgnoreCaseAndUser_UsernameContainingIgnoreCase(Long departmentId, String keyword, String username, Pageable pageable);
 
     Page<Employee> findByDepartmentIdAndFullNameContainingIgnoreCase(Long departmentId, String keyword, Pageable pageable);

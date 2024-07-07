@@ -136,4 +136,24 @@ public class OvertimeController {
             return ResponseEntity.status(500).build();
         }
     }
+
+    @PutMapping("/{id}/approve")
+    public ResponseEntity<Void> approveRemote(@PathVariable("id") long id) {
+        try {
+            overtimeService.approveRemote(id);
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @PutMapping("/{id}/reject")
+    public ResponseEntity<Void> rejectRemote(@PathVariable("id") long id) {
+        try {
+            overtimeService.rejectRemote(id);
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
 }

@@ -33,6 +33,7 @@ public class RemoteService implements IRemoteService {
     public final EmployeeRepository employeeRepository;
 
 
+
     @Override
     public List<Remote> getAllRemotes() throws Exception {
         List<Remote> remotes = remoteRepository.findAll();

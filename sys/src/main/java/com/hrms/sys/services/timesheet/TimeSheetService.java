@@ -1,22 +1,19 @@
 package com.hrms.sys.services.timesheet;
 
-import com.hrms.sys.dtos.MonthSummaryDTO;
-import com.hrms.sys.dtos.TimeSheetDTO;
-import com.hrms.sys.dtos.TotalHoursDTO;
+import com.hrms.sys.dtos.*;
 import com.hrms.sys.exceptions.NotFoundException;
 import com.hrms.sys.models.TimeSheet;
 import com.hrms.sys.models.User;
 import com.hrms.sys.repositories.TimeSheetRepository;
+import com.hrms.sys.repositories.UserRepository;
 import com.hrms.sys.services.user.UserService;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
-import java.time.Duration;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.Month;
+import java.time.*;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.TemporalAdjusters;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -26,6 +23,8 @@ public class TimeSheetService implements ITimeSheetService{
 
     private final TimeSheetRepository timeSheetRepository;
     private final UserService userService;
+    private final UserRepository userRepository;
+
     public TimeSheet saveOrUpdateTimeSheet(TimeSheet timeSheet) {
         if (timeSheet.getUser() == null || timeSheet.getRecordDate() == null) {
             // Xử lý khi thông tin bảng chấm công không hợp lệ
@@ -122,7 +121,7 @@ public class TimeSheetService implements ITimeSheetService{
         // Tính toán số giờ làm việc
         Duration duration = Duration.between(timeSheet.getCheckIn(), timeSheet.getCheckOut());
         long hours = duration.toHours();
-        if (hours > 9) {
+        if (hours > 8) {
             hours = 8;
         }
         if (timeSheet.getTypeWork().equals("Remote") || timeSheet.getTypeWork().equals("Onsite")) {
@@ -176,6 +175,8 @@ public class TimeSheetService implements ITimeSheetService{
         return mapTimeSheetsToDTOs(timeSheets);
     }
 
+
+
     // Hàm chuyển đổi danh sách TimeSheet thành danh sách TimeSheetDTO
     private List<TimeSheetDTO> mapTimeSheetsToDTOs(List<TimeSheet> timeSheets) {
         return timeSheets.stream()
@@ -207,29 +208,37 @@ public class TimeSheetService implements ITimeSheetService{
         timeSheetDTO.setFullName(timeSheet.getUser().getFullName());
         return timeSheetDTO;
     }
-    public TotalHoursDTO getTotalHoursForLastFifteenDays(Long userId) {LocalDate currentDate = LocalDate.now();
+    public TotalHoursDTO getTotalHoursForMonth(Long userId) {
+        // Lấy ngày hiện tại
+        LocalDate currentDate = LocalDate.now();
 
-        // Calculate start date
-        LocalDate previousMonth = currentDate.minusMonths(1);
-        int maxDay = previousMonth.lengthOfMonth();
-        LocalDate startDate = previousMonth.withDayOfMonth(Math.min(15, maxDay));
+        // Lấy năm và tháng hiện tại
+        int year = currentDate.getYear();
+        int month = currentDate.getMonthValue() - 1;
 
-        // Calculate end date
-        LocalDate endDate = currentDate.withDayOfMonth(15);
+        // Tính ngày đầu tiên của tháng hiện tại
+        LocalDate firstDayOfMonth = LocalDate.of(year, month, 1);
 
-        // Lấy danh sách các bản ghi trong khoảng thời gian từ startDate đến endDate
-        List<TimeSheet> timeSheets = timeSheetRepository.findByRecordDateBetweenAndUserId(startDate, endDate , userId);
+        // Tính ngày cuối cùng của tháng hiện tại
+        YearMonth yearMonth = YearMonth.of(year, month);
+        LocalDate lastDayOfMonth = yearMonth.atEndOfMonth();
 
+        // Lấy danh sách các bản ghi trong khoảng thời gian từ ngày đầu tiên đến ngày cuối cùng của tháng
+        List<TimeSheet> timeSheets = timeSheetRepository.findByRecordDateBetweenAndUserId(firstDayOfMonth, lastDayOfMonth, userId);
+
+        // Khởi tạo biến tổng số giờ làm việc, số giờ làm thêm và số giờ nghỉ
         float totalWorkingHours = 0;
         float totalOvertimeHours = 0;
         float totalLeaveHours = 0;
 
+        // Tính tổng số giờ làm việc, số giờ làm thêm và số giờ nghỉ từ danh sách bản ghi
         for (TimeSheet timeSheet : timeSheets) {
             totalWorkingHours += timeSheet.getWorkingHours();
             totalOvertimeHours += timeSheet.getOvertimeHours();
             totalLeaveHours += timeSheet.getLeaveHours();
         }
 
+        // Trả về đối tượng TotalHoursDTO
         return new TotalHoursDTO(userId, totalWorkingHours, totalOvertimeHours, totalLeaveHours);
     }
 
@@ -282,4 +291,237 @@ public class TimeSheetService implements ITimeSheetService{
 
         return new ArrayList<>(monthSummaryMap.values());
     }
+
+
+    public TotalHoursDTO getTotalHoursForMonthAndYear(long userId, int year, int month) {
+        // Tính toán khoảng thời gian bắt đầu và kết thúc của tháng và năm cụ thể
+        LocalDateTime startOfMonth = LocalDateTime.of(year, month, 1, 0, 0, 0);
+        LocalDateTime endOfMonth = startOfMonth.plusMonths(1).minusDays(1).withHour(23).withMinute(59).withSecond(59);
+
+        // Tính toán tổng số giờ làm việc từ bảng TimeSheet cho người dùng cụ thể
+        List<TimeSheet> timeSheets = timeSheetRepository.findByUserIdAndRecordDateBetween(userId, startOfMonth.toLocalDate(), endOfMonth.toLocalDate());
+        float totalWorkingHours = 0;
+        float totalOvertimeHours = 0;
+
+        for (TimeSheet timeSheet : timeSheets) {
+            totalWorkingHours += timeSheet.getWorkingHours();
+            totalOvertimeHours += timeSheet.getOvertimeHours();
+        }
+
+        return TotalHoursDTO.builder()
+                .userId(userId)
+                .totalWorkingHours(totalWorkingHours)
+                .totalOvertimeHours(totalOvertimeHours)
+                .build();
+    }
+
+
+    public List<MonthlyWorkSummaryDTO> getMonthlyWorkSummaryForAllEmployeesByYear(int year) throws Exception {
+        List<TimeSheet> timeSheets = timeSheetRepository.findAll();
+
+        // Map để lưu trữ tổng kết hàng tháng cho từng nhân viên
+        Map<Long, Map<Month, MonthlyWorkSummaryDTO>> employeeMonthSummaryMap = new HashMap<>();
+
+        // Khởi tạo tổng kết hàng tháng cho tất cả nhân viên
+        List<User> users = userService.getUsers();
+        for (User user : users) {
+            Map<Month, MonthlyWorkSummaryDTO> monthSummaryMap = new HashMap<>();
+            for (Month month : Month.values()) {
+                monthSummaryMap.put(month, new MonthlyWorkSummaryDTO(user.getId(), user.getUsername(), month.toString(), 0, 0));
+            }
+            employeeMonthSummaryMap.put(user.getId(), monthSummaryMap);
+        }
+
+        // Tính toán số ngày làm việc và số ngày nghỉ cho từng tháng trong năm cụ thể
+        for (TimeSheet timeSheet : timeSheets) {
+            LocalDate recordDate = timeSheet.getRecordDate();
+            if (recordDate.getYear() == year) {
+                Long userId = timeSheet.getUser().getId();
+                Month month = recordDate.getMonth();
+                MonthlyWorkSummaryDTO summary = employeeMonthSummaryMap.get(userId).get(month);
+                if (timeSheet.getLeaveHours() > 0) {
+                    summary.setOffDays(summary.getOffDays() + 1);
+                } else {
+                    summary.setWorkingDays(summary.getWorkingDays() + 1);
+                }
+            }
+        }
+
+        // Tạo danh sách tổng kết hàng tháng cho tất cả nhân viên
+        List<MonthlyWorkSummaryDTO> monthlySummaries = new ArrayList<>();
+        for (Map<Month, MonthlyWorkSummaryDTO> monthSummaryMap : employeeMonthSummaryMap.values()) {
+            monthlySummaries.addAll(monthSummaryMap.values());
+        }
+
+        // Sort the summaries by month
+        monthlySummaries.sort(Comparator.comparingInt(summary -> Month.valueOf(summary.getMonth().toUpperCase()).getValue()));
+
+        return monthlySummaries;
+    }
+
+    // Phương thức để lấy ngày bắt đầu và kết thúc của tuần hiện tại
+    public static LocalDate[] getCurrentWeekDates() {
+        LocalDate currentDate = LocalDate.now();
+        LocalDate startDate = currentDate.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+        LocalDate endDate = startDate.plusDays(6);
+        return new LocalDate[]{startDate, endDate};
+    }
+
+    // Phương thức để tính toán dữ liệu chấm công theo tuần, bắt đầu từ ngày hiện tại
+    public List<Map<String, Object>> getAttendanceCountByCurrentWeek() {
+        LocalDate[] currentWeekDates = getCurrentWeekDates();
+        LocalDate startDate = currentWeekDates[0];
+        LocalDate endDate = currentWeekDates[1];
+
+        Map<DayOfWeek, Map<String, Long>> attendanceMap = new HashMap<>();
+        for (DayOfWeek dayOfWeek : DayOfWeek.values()) {
+            attendanceMap.put(dayOfWeek, new HashMap<>());
+        }
+
+        // Lấy dữ liệu chấm công từ cơ sở dữ liệu dựa trên ngày bắt đầu và kết thúc của tuần
+        List<TimeSheet> timeSheets = timeSheetRepository.findByRecordDateBetween(startDate, endDate);
+
+        // Tính toán số lần chấm công cho mỗi ngày trong tuần
+        for (DayOfWeek dayOfWeek : DayOfWeek.values()) {
+            for (TimeSheet timeSheet : timeSheets) {
+                if (timeSheet.getRecordDate().getDayOfWeek() == dayOfWeek) {
+                    String attendanceType = timeSheet.getInTime() != null && timeSheet.getOutTime() != null ? "Present" : "Absent";
+                    attendanceMap.get(dayOfWeek).merge(attendanceType, 1L, Long::sum);
+                }
+            }
+        }
+        List<Map<String, Object>> resultList = convertAttendanceMapToList(attendanceMap);
+
+        return resultList;
+    }
+
+
+    // Phương thức để tính toán dữ liệu chấm công theo tháng
+    public List<Map<String, Object>> getAttendanceCountByMonth(int year, int month) {
+        LocalDate startDate = LocalDate.of(year, month, 1);
+        LocalDate endDate = startDate.plusMonths(1).minusDays(1);
+
+        Map<Integer, Map<String, Long>> attendanceMap = new HashMap<>();
+        for (int i = 1; i <= endDate.lengthOfMonth(); i++) {
+            attendanceMap.put(i, new HashMap<>());
+        }
+
+        List<TimeSheet> timeSheets = timeSheetRepository.findByRecordDateBetween(startDate, endDate);
+        for (int i = 1; i <= endDate.lengthOfMonth(); i++) {
+            LocalDate currentDate = LocalDate.of(year, month, i);
+            for (TimeSheet timeSheet : timeSheets) {
+                if (timeSheet.getRecordDate().isEqual(currentDate)) {
+                    String attendanceType = timeSheet.getInTime() != null && timeSheet.getOutTime() != null ? "Present" : "Absent";
+                    attendanceMap.get(i).merge(attendanceType, 1L, Long::sum);
+                }
+            }
+        }
+
+        List<Map<String, Object>> resultList = convertAttendanceMapToList(attendanceMap);
+
+        return resultList;
+    }
+
+
+//    public List<Map<String, Object>> convertAttendanceMapToList(Map<DayOfWeek, Map<String, Long>> attendanceMap) {
+//        List<Map<String, Object>> resultList = new ArrayList<>();
+//
+//        for (DayOfWeek dayOfWeek : DayOfWeek.values()) {
+//            Map<String, Object> dayData = new HashMap<>();
+//            dayData.put("day", dayOfWeek.toString());
+//
+//            Map<String, Long> dayAttendance = attendanceMap.getOrDefault(dayOfWeek, new HashMap<>());
+//            dayData.put("working", dayAttendance.getOrDefault("Present", 0L));
+//            dayData.put("off", dayAttendance.getOrDefault("Absent", 0L));
+//
+//            resultList.add(dayData);
+//        }
+//
+//        return resultList;
+//    }
+// Phương thức chuyển đổi dữ liệu Map sang danh sách các đối tượng Map
+private List<Map<String, Object>> convertAttendanceMapToList(Map<?, Map<String, Long>> attendanceMap) {
+    List<Map<String, Object>> resultList = new ArrayList<>();
+
+    for (Map.Entry<?, Map<String, Long>> entry : attendanceMap.entrySet()) {
+        Map<String, Object> dayData = new HashMap<>();
+        dayData.put("day", entry.getKey().toString());
+        dayData.put("working", entry.getValue().getOrDefault("Present", 0L));
+        dayData.put("off", entry.getValue().getOrDefault("Absent", 0L));
+        resultList.add(dayData);
+    }
+
+    return resultList;
+}
+    @Override
+    public List<DailyWorkDetailDTO> getMonthlyWorkSummaryByYear(int year, String username) {
+        List<TimeSheet> timeSheets = timeSheetRepository.findAll();
+
+        List<DailyWorkDetailDTO> dailyWorkDetails = new ArrayList<>();
+
+        // Tìm người dùng với username
+        Optional<User> userOptional = userRepository.findByUsername(username);
+        if (userOptional.isEmpty()) {
+            // Xử lý khi không tìm thấy người dùng
+            return dailyWorkDetails; // hoặc có thể trả về null hoặc throw exception
+        }
+        User user = userOptional.get();
+
+        // Tạo map để lưu trữ danh sách các ngày làm việc của người dùng trong tháng
+        Map<LocalDate, DailyWorkDetailDTO> workDetailMap = new HashMap<>();
+
+        // Lặp qua các bản ghi TimeSheet để tính toán số ngày làm việc và nghỉ trong tháng
+        for (TimeSheet timeSheet : timeSheets) {
+            LocalDate recordDate = timeSheet.getRecordDate();
+            if (recordDate.getYear() == year && timeSheet.getUser().equals(user)) {
+                // Kiểm tra nếu ngày này đã có trong map, nếu chưa thì thêm vào
+                workDetailMap.computeIfAbsent(recordDate, date -> {
+                    DailyWorkDetailDTO detailDTO = new DailyWorkDetailDTO();
+                    detailDTO.setUserId(user.getId());
+                    detailDTO.setUsername(user.getUsername());
+                    detailDTO.setWorkDate(recordDate);
+                    return detailDTO;
+                });
+
+                DailyWorkDetailDTO detailDTO = workDetailMap.get(recordDate);
+                if (timeSheet.getLeaveHours() > 0) {
+                    detailDTO.setOffDay(true);
+                } else {
+                    detailDTO.setWorkingDay(true);
+                }
+            }
+        }
+
+        // Chuyển map thành danh sách kết quả
+        dailyWorkDetails.addAll(workDetailMap.values());
+
+        // Sắp xếp theo ngày làm việc
+        dailyWorkDetails.sort(Comparator.comparing(DailyWorkDetailDTO::getWorkDate));
+
+        return dailyWorkDetails;
+    }
+
+    public void updateCheckInOutTime(String code, TimeSheetDTO timeSheetDTO) throws NotFoundException {
+        // Tìm TimeSheet dựa trên code
+        TimeSheet timeSheet = timeSheetRepository.findByCode(code);
+        if (timeSheet == null) {
+            throw new NotFoundException("Time sheet not found with code: " + code);
+        }
+
+        // Cập nhật thời gian check-in và check-out từ timeSheetDTO nếu có
+        if (timeSheetDTO.getInTime() != null) {
+            timeSheet.setInTime(timeSheetDTO.getInTime());
+            timeSheet.setCheckIn(timeSheetDTO.getInTime());
+        }
+        if (timeSheetDTO.getOutTime() != null) {
+            timeSheet.setOutTime(timeSheetDTO.getOutTime());
+            timeSheet.setCheckOut(timeSheetDTO.getOutTime());
+            calculateWorkHours(timeSheet); // Tính toán lại số giờ làm việc nếu cần
+        }
+
+        // Lưu lại vào repository
+        timeSheetRepository.save(timeSheet);
+    }
+
+
 }

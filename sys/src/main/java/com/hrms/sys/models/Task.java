@@ -1,29 +1,36 @@
 package com.hrms.sys.models;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "departments_details")
+@Table(name = "tasks")
 @Data
 @Setter
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class DepartmentDetail {
+public class Task {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Long taskId;
 
+    private Long userId;
+
+    private String username;
+
+    private String fullname;
+
+    private String name;
+
+    private String description;
+
+    private String status;
 
     @ManyToOne
     @JoinColumn(name = "department_id")
-    @JsonBackReference
     private Department department;
 
-    @ManyToOne
-    @JoinColumn(name = "employee_id")
-    private Employee employee;
+    private Long managerId;
 }

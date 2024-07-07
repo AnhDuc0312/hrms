@@ -101,4 +101,24 @@ public class LeaveController {
         List<Leave> leaves = leaveService.getLeavesByDate();
         return ResponseEntity.ok(leaves);
     }
+
+    @PutMapping("/{id}/approve")
+    public ResponseEntity<Void> approveLeave(@PathVariable("id") long id) {
+        try {
+            leaveService.approveRemote(id);
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @PutMapping("/{id}/reject")
+    public ResponseEntity<Void> rejecLeave(@PathVariable("id") long id) {
+        try {
+            leaveService.rejectRemote(id);
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
 }

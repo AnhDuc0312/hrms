@@ -14,9 +14,6 @@ public class DepartmentDTO {
     @JsonProperty("name")
     private String name;
 
-    @JsonProperty("description")
-    private String description;
-
     @JsonProperty("manager_id")
     private String managerId;
 }

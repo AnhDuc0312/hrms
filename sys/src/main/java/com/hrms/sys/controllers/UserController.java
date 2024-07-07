@@ -55,8 +55,9 @@ public class UserController {
         try {
             String token = userService.login(
                     userLoginDTO.getUsername(),
-                    userLoginDTO.getPassword(),
-                    userLoginDTO.getRoleId() == null ? 1 : userLoginDTO.getRoleId());
+                    userLoginDTO.getPassword()
+                    );
+//            userLoginDTO.getRoleId() == null ? 1 : userLoginDTO.getRoleId()
 
             return ResponseEntity.ok(LoginResponse.builder()
                     .message("LOGIN_SUCCESSFULLY")
@@ -262,11 +263,46 @@ public class UserController {
     }
 
     @GetMapping("/getall")
-    public ResponseEntity<List<UserChatResponse>> getall() throws IOException {
-        try{
-            return new ResponseEntity<List<UserChatResponse>>(userService.getAllUser(), HttpStatus.OK);
-        }catch (Exception e){
-            return new ResponseEntity("User not Found", HttpStatus.NOT_FOUND);
+    public ResponseEntity<List<UserChatResponse>> getAllUsers() {
+        try {
+            List<UserChatResponse> users = userService.getAllUser();
+            if (users.isEmpty()) {
+                return ResponseEntity.notFound().build();
+            }
+            return ResponseEntity.ok(users);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @PutMapping("/{userId}/role")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    public ResponseEntity<ResponseObject> updateUserRole(
+            @PathVariable Long userId,
+            @RequestParam Long roleId) {
+        try {
+            User updatedUser = userService.updateUserRole(userId, roleId);
+            return ResponseEntity.ok().body(
+                    ResponseObject.builder()
+                            .message("User role updated successfully")
+                            .data(UserResponse.fromUser(updatedUser))
+                            .status(HttpStatus.OK)
+                            .build()
+            );
+        } catch (NotFoundException | InvalidDataException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+                    ResponseObject.builder()
+                            .message(e.getMessage())
+                            .status(HttpStatus.BAD_REQUEST)
+                            .build()
+            );
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+                    ResponseObject.builder()
+                            .message("Internal server error")
+                            .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                            .build()
+            );
         }
     }
 }

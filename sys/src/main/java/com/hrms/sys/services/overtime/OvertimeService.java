@@ -3,6 +3,7 @@ package com.hrms.sys.services.overtime;
 import com.hrms.sys.dtos.OvertimeDTO;
 import com.hrms.sys.models.Employee;
 import com.hrms.sys.models.Overtime;
+import com.hrms.sys.models.Remote;
 import com.hrms.sys.models.User;
 import com.hrms.sys.repositories.EmployeeRepository;
 import com.hrms.sys.repositories.OvertimeRepository;
@@ -15,6 +16,7 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 @Service
@@ -231,5 +233,38 @@ public class OvertimeService implements IOvertimeService {
         statistics.put("pending", pendingCount);
 
         return statistics;
+    }
+
+    @Override
+    public void approveRemote(long id) throws Exception {
+        Overtime overtime = overtimeRepository.findById(id).orElse(null);
+        overtime.setStatus("Approved");
+        overtime.setWorkedHours(8F);
+
+        Employee employee = employeeRepository.findById(overtime.getUser().getId())
+                .orElseThrow(() -> new RuntimeException("Employee not found"));
+
+
+        //tính time nghỉ
+        LocalDateTime remoteStartDateTime = overtime.getFromDatetime();
+        LocalDateTime remoteEndDateTime = overtime.getToDatetime();
+        float remainingOvertimeHours = employee.getRemainingOvertimeHours();
+        long hoursBetween = ChronoUnit.HOURS.between(remoteStartDateTime, remoteEndDateTime);
+        float updatedRemainingOvertimeHours = remainingOvertimeHours - hoursBetween;
+        employee.setRemainingOvertimeHours(updatedRemainingOvertimeHours);
+        overtimeRepository.save(overtime);
+        employeeRepository.save(employee);
+
+    }
+
+    @Override
+    public void rejectRemote(long id) throws Exception{
+        Overtime overtime = overtimeRepository.findById(id).orElse(null);
+        assert overtime != null;
+        if (overtime.getStatus().equals("Pending")){
+            overtime.setStatus("Reject");
+            overtime.setWorkedHours(0F);
+            overtimeRepository.save(overtime);
+        }
     }
 }

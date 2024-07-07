@@ -103,7 +103,8 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public String login(String username, String password, Long roleId) throws Exception {
+    public String login(String username, String password) throws Exception {
+
         Optional<User> optionalUser = userRepository.findByUsername(username);
         if (optionalUser.isEmpty()) {
             throw new InvalidDataException("Invalid phonenumber / password");
@@ -121,6 +122,7 @@ public class UserService implements IUserService {
         );
 
         authenticationManager.authenticate(authenticationToken);
+        Long roleId = existingUser.getRole().getId();
 
         return jwtTokenUtil.generateToken(existingUser);
 
@@ -218,11 +220,25 @@ public class UserService implements IUserService {
         List<User> users = userRepository.findAll();
         for (User user : users) {
             UserChatResponse userChatResponse = new UserChatResponse();
+            userChatResponse.setId(user.getId());
             userChatResponse.setUsername(user.getUsername());
             userChatResponse.setFullname(user.getFullName());
+            userChatResponse.setRole(user.getRole().getName());
+            userChatResponse.setEmail(user.getEmail());
             userChatResponses.add(userChatResponse);
         }
         return userChatResponses;
+    }
+
+    public User updateUserRole(Long userId, Long roleId) throws NotFoundException, InvalidDataException {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("User not found"));
+
+        Role role = roleRepository.findById(roleId)
+                .orElseThrow(() -> new InvalidDataException("Role not found"));
+
+        user.setRole(role);
+        return userRepository.save(user);
     }
 
 

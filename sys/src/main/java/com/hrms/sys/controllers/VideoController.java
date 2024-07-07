@@ -2,6 +2,8 @@ package com.hrms.sys.controllers;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.hrms.sys.dtos.VideoDTO;
+import com.hrms.sys.exceptions.InvalidDataException;
 import com.hrms.sys.models.Video;
 import com.hrms.sys.responses.VideoResponse;
 import com.hrms.sys.services.video.VideoService;
@@ -22,12 +24,12 @@ public class VideoController {
     private final VideoService videoService;
 
     @PostMapping("/upload")
-    public ResponseEntity<Video> uploadVideo(
+    public ResponseEntity<VideoDTO> uploadVideo(
             @RequestParam("courseId") String courseId,
             @RequestParam("file") MultipartFile file,
             @RequestParam("title") String title) {
         try {
-            Video video = videoService.uploadVideo(courseId, file, title);
+            VideoDTO video = videoService.uploadVideo(courseId, file, title);
             return ResponseEntity.status(HttpStatus.CREATED).body(video);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
@@ -44,8 +46,30 @@ public class VideoController {
         }
     }
 
+    @DeleteMapping("/{videoId}")
+    public ResponseEntity<?> deleteVideo(@PathVariable String videoId) {
+        try{
+            videoService.deleteVideo(videoId);
+            return ResponseEntity.ok("{\"message\": \"Deleted video successfully\"}");
 
-    private final RestTemplate restTemplate;
+        }catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
+    }
+
+    @PutMapping("/{videoId}")
+    public ResponseEntity<?> updateVideo(@PathVariable String videoId, @RequestBody VideoDTO video) {
+        try {
+            videoService.updateVideo(videoId,video);
+            return ResponseEntity.ok().body("{\"message\": \"Password updated successfully\"}");
+
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+
+        private final RestTemplate restTemplate;
 
     private final String baseUrl = "https://firebasestorage.googleapis.com/v0/b/";
 
